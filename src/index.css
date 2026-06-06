@@ -52,6 +52,7 @@
 	--spacing-site-header: 3.3125rem;
 	--container-max: 21.875rem;
 	--container-max-md: 48rem;
+	--container-max-xl: 80rem;
 
 	--text-body-lg: 1.0625rem;
 	--text-body-lg--line-height: 1.5;
@@ -86,6 +87,10 @@
 
 	@variant md {
 		max-width: var(--container-max-md);
+	}
+
+	@variant xl {
+		max-width: var(--container-max-xl);
 	}
 }
 
