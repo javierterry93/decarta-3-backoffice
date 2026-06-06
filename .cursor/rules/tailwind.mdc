@@ -1,0 +1,94 @@
+---
+description: Tailwind v4 · token-first
+globs: src/**/*.{ts,tsx,css}
+alwaysApply: false
+---
+
+# Styling
+
+## Rules
+
+- Use Tailwind utilities in `className`.
+- Use CSS only in `src/index.css`.
+- Use semantic design tokens only.
+- Prefer existing tokens/utilities before creating new ones.
+
+## Forbidden
+
+- Component CSS files
+- CSS Modules
+- `App.css`
+- Arbitrary values (`[...]`)
+- Brand/custom color names (`apple-*`, `slate-*`, `gray-*`)
+- Raw colors outside `src/index.css`
+- Layout wrappers like `mx-auto max-w-* px-*`
+
+```tsx
+// ❌ bg-apple-bg text-[17px] top-[53px] mx-auto max-w-xl px-4
+// ✅ bg-surface text-body-lg top-site-header container
+```
+
+## Color Tokens
+
+### Surface
+`surface` · `surface-elevated` · `surface-muted` · `fill`
+
+### Text
+`foreground` · `foreground-muted` · `foreground-subtle`
+
+### Structure
+`border` · `separator`
+
+### Action
+`primary` · `primary-hover` · `on-primary` · `link`
+
+### Status
+`success` · `info`
+
+### Accent
+`accent-purple` · `accent-orange`
+
+### Neutral
+`neutral-50` → `neutral-900`
+
+> Colors exist only in the PALETTE section of `src/index.css`.
+
+## Layout
+
+```tsx
+<Container backgroundClassName sectionClassName>
+```
+
+Inner content:
+
+```tsx
+className="container"
+```
+
+## Tokens
+
+`--container-max`
+`--container-max-md`
+`--spacing-site-header`
+`--min-height-hero`
+`--text-body-lg`
+`--scale-press`
+
+## Extensions
+
+| Add | Use |
+|------|------|
+| Token | `@theme` |
+| Utility | `@utility` |
+| Global styles | `@layer base` |
+
+## Patterns
+
+```tsx
+['base', condition && 'variant']
+  .filter(Boolean)
+  .join(' ')
+```
+
+- Use variant helpers.
+- Expose styling overrides through `*ClassName`.

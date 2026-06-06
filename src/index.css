@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+
+/* PALETTE — only place for hex values */
+@theme {
+	--color-neutral-50: #fbfbfd;
+	--color-neutral-100: #f5f5f7;
+	--color-neutral-200: #e8e8ed;
+	--color-neutral-300: #d2d2d7;
+	--color-neutral-400: #aeaeb2;
+	--color-neutral-500: #86868b;
+	--color-neutral-600: #6e6e73;
+	--color-neutral-700: #424245;
+	--color-neutral-800: #1d1d1f;
+	--color-neutral-850: #161617;
+	--color-neutral-900: #000000;
+	--color-neutral-450: #a1a1a6;
+	--color-neutral-550: #8e8e93;
+	--color-neutral-250: #38383a;
+	--color-neutral-fill-dark: #ffffff14;
+
+	--color-primary: #0071e3;
+	--color-primary-hover: #2997ff;
+	--color-on-primary: #ffffff;
+	--color-success: #34c759;
+	--color-info: #5856d6;
+	--color-accent-purple: #af52de;
+	--color-accent-orange: #ff9500;
+	--color-fill-light: #0000000a;
+
+	/* Semantic roles — used by components */
+	--color-surface: var(--color-neutral-100);
+	--color-surface-elevated: #ffffff;
+	--color-surface-muted: var(--color-neutral-50);
+	--color-surface-inverse: var(--color-neutral-800);
+	--color-surface-inverse-deep: var(--color-neutral-900);
+	--color-foreground: var(--color-neutral-800);
+	--color-foreground-muted: var(--color-neutral-500);
+	--color-foreground-subtle: var(--color-neutral-600);
+	--color-foreground-on-inverse: var(--color-neutral-100);
+	--color-foreground-on-inverse-muted: var(--color-neutral-400);
+	--color-border: var(--color-neutral-300);
+	--color-border-inverse: var(--color-neutral-700);
+	--color-separator: var(--color-neutral-200);
+	--color-fill: var(--color-fill-light);
+	--color-link: var(--color-primary);
+	--color-shadow: var(--color-neutral-900);
+
+	--font-sans:
+		-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+		Helvetica, Arial, sans-serif;
+
+	--spacing-site-header: 3.3125rem;
+	--container-max: 21.875rem;
+	--container-max-md: 48rem;
+
+	--text-body-lg: 1.0625rem;
+	--text-body-lg--line-height: 1.5;
+	--leading-display: 1.08;
+	--tracking-label: 0.2em;
+
+	--blur-overlay: 2px;
+	--min-height-hero: 85vh;
+	--scale-press: 0.98;
+}
+
+@media (prefers-color-scheme: dark) {
+	@theme {
+		--color-surface: var(--color-neutral-900);
+		--color-surface-elevated: var(--color-neutral-800);
+		--color-surface-muted: var(--color-neutral-850);
+		--color-foreground: var(--color-neutral-100);
+		--color-foreground-muted: var(--color-neutral-450);
+		--color-foreground-subtle: var(--color-neutral-550);
+		--color-border: var(--color-neutral-700);
+		--color-separator: var(--color-neutral-250);
+		--color-fill: var(--color-neutral-fill-dark);
+		--color-link: var(--color-primary-hover);
+	}
+}
+
+@utility container {
+	width: 100%;
+	margin-inline: auto;
+	padding-inline: --spacing(4);
+	max-width: var(--container-max);
+
+	@variant md {
+		max-width: var(--container-max-md);
+	}
+}
+
+@layer base {
+	:root {
+		color-scheme: light;
+	}
+
+	@media (prefers-color-scheme: dark) {
+		:root {
+			color-scheme: dark;
+		}
+	}
+
+	body {
+		@apply bg-surface font-sans text-foreground antialiased;
+	}
+}
