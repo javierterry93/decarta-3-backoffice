@@ -1,121 +1,205 @@
-import {
-	ClipboardList,
-	Eye,
-	FolderOpen,
-	Image,
-	LayoutDashboard,
-	Menu,
-	Settings,
-	X,
-} from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { Menu, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn.ts';
 import { Button } from '../ui/Button.tsx';
+import { navItems, pageTitles } from './navItems.ts';
 
-const navItems = [
-	{ to: '/', label: 'Inicio', icon: LayoutDashboard, end: true },
-	{ to: '/carta', label: 'Carta', icon: ClipboardList },
-	{ to: '/categorias', label: 'Categorías', icon: FolderOpen },
-	{ to: '/imagenes', label: 'Imágenes', icon: Image },
-	{ to: '/vista-previa', label: 'Vista previa', icon: Eye },
-	{ to: '/configuracion', label: 'Configuración', icon: Settings },
-];
+const DRAWER_DURATION_MS = 200;
 
-type SidebarProps = {
+function useDrawerTransition(open: boolean) {
+	const [mounted, setMounted] = useState(open);
+	const [visible, setVisible] = useState(open);
+
+	useEffect(() => {
+		if (open) {
+			setMounted(true);
+			const frame = requestAnimationFrame(() => setVisible(true));
+			return () => cancelAnimationFrame(frame);
+		}
+		setVisible(false);
+		const timer = window.setTimeout(() => setMounted(false), DRAWER_DURATION_MS);
+		return () => window.clearTimeout(timer);
+	}, [open]);
+
+	return { mounted, visible };
+}
+
+function Sidebar() {
+	return (
+		<aside className="hidden w-64 shrink-0 flex-col border-r border-separator bg-surface-elevated lg:flex">
+			<div className="flex h-site-header items-center border-b border-separator px-4">
+				<span className="text-lg font-semibold text-foreground">Mi Carta</span>
+			</div>
+			<nav className="flex-1 space-y-1 p-3" aria-label="Menú principal">
+				{navItems.map(({ to, label, icon: Icon, end }) => (
+					<NavLink
+						key={to}
+						to={to}
+						end={end}
+						className={({ isActive }) =>
+							cn(
+								'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+								isActive
+									? 'bg-primary text-on-primary'
+									: 'text-foreground-muted hover:bg-fill hover:text-foreground',
+							)
+						}
+					>
+						<Icon className="h-5 w-5 shrink-0" aria-hidden />
+						{label}
+					</NavLink>
+				))}
+			</nav>
+		</aside>
+	);
+}
+
+function MobileNavDrawer({
+	open,
+	onClose,
+}: {
 	open: boolean;
 	onClose: () => void;
-};
+}) {
+	const { mounted, visible } = useDrawerTransition(open);
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+	if (!mounted) return null;
+
 	return (
-		<>
-			{open && (
-				<button
-					type="button"
-					className="fixed inset-0 z-40 bg-shadow/30 backdrop-blur-overlay lg:hidden"
-					onClick={onClose}
-					aria-label="Cerrar menú"
-				/>
-			)}
-
-			<aside
+		<div className="fixed inset-0 z-50 lg:hidden" role="presentation">
+			<button
+				type="button"
 				className={cn(
-					'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-separator bg-surface-elevated transition-transform lg:static lg:translate-x-0',
-					open ? 'translate-x-0' : '-translate-x-full',
+					'absolute inset-0 bg-shadow/40 backdrop-blur-overlay transition-opacity ease-out',
+					visible ? 'opacity-100' : 'opacity-0',
 				)}
+				style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}
+				onClick={onClose}
+				aria-label="Cerrar menú"
+			/>
+			<aside
+				id="mobile-nav-menu"
+				aria-label="Menú principal"
+				aria-hidden={!visible}
+				className={cn(
+					'absolute inset-y-0 left-0 flex w-4/5 flex-col border-r border-separator bg-surface-elevated shadow-lg transition-transform ease-out',
+					'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]',
+					visible ? 'translate-x-0' : '-translate-x-full',
+				)}
+				style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}
 			>
-				<div className="flex h-site-header items-center justify-between border-b border-separator px-4">
-					<span className="text-lg font-semibold text-foreground">
-						Mi Carta
-					</span>
+				<div className="flex h-site-header shrink-0 items-center justify-between border-b border-separator px-3">
+					<span className="text-lg font-semibold text-foreground">Mi Carta</span>
 					<Button
 						variant="ghost"
 						size="icon"
-						className="lg:hidden"
 						onClick={onClose}
 						aria-label="Cerrar menú"
 					>
-						<X className="h-5 w-5" />
+						<X className="h-5 w-5" aria-hidden />
 					</Button>
 				</div>
-
-				<nav className="flex-1 space-y-1 p-3" aria-label="Menú principal">
-					{navItems.map(({ to, label, icon: Icon, end }) => (
-						<NavLink
-							key={to}
-							to={to}
-							end={end}
-							onClick={onClose}
-							className={({ isActive }) =>
-								cn(
-									'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-									isActive
-										? 'bg-primary text-on-primary'
-										: 'text-foreground-muted hover:bg-fill hover:text-foreground',
-								)
-							}
-						>
-							<Icon className="h-5 w-5 shrink-0" aria-hidden />
-							{label}
-						</NavLink>
-					))}
+				<nav className="flex-1 overflow-y-auto p-3">
+					<ul className="space-y-1">
+						{navItems.map(({ to, label, icon: Icon, end }) => (
+							<li key={to}>
+								<NavLink
+									to={to}
+									end={end}
+									onClick={onClose}
+									className={({ isActive }) =>
+										cn(
+											'flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-medium transition-colors',
+											isActive
+												? 'bg-primary text-on-primary'
+												: 'text-foreground hover:bg-fill',
+										)
+									}
+								>
+									<Icon className="h-5 w-5 shrink-0" aria-hidden />
+									{label}
+								</NavLink>
+							</li>
+						))}
+					</ul>
 				</nav>
 			</aside>
+		</div>
+	);
+}
+
+function MobileHeader({
+	menuOpen,
+	onToggleMenu,
+	onCloseMenu,
+}: {
+	menuOpen: boolean;
+	onToggleMenu: () => void;
+	onCloseMenu: () => void;
+}) {
+	const { pathname } = useLocation();
+	const title = pageTitles[pathname] ?? 'Mi Carta';
+
+	return (
+		<>
+			<header className="flex h-site-header shrink-0 items-center gap-3 border-b border-separator bg-surface-elevated px-3 lg:hidden">
+				<Button
+					variant="ghost"
+					size="icon"
+					onClick={onToggleMenu}
+					aria-expanded={menuOpen}
+					aria-controls="mobile-nav-menu"
+					aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
+				>
+					<Menu className="h-5 w-5" aria-hidden />
+				</Button>
+				<h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
+					{title}
+				</h1>
+			</header>
+			<MobileNavDrawer open={menuOpen} onClose={onCloseMenu} />
 		</>
 	);
 }
 
 type AppLayoutProps = {
 	children: React.ReactNode;
-	sidebarOpen: boolean;
-	onToggleSidebar: () => void;
-	onCloseSidebar: () => void;
 };
 
-export function AppLayout({
-	children,
-	sidebarOpen,
-	onToggleSidebar,
-	onCloseSidebar,
-}: AppLayoutProps) {
+export function AppLayout({ children }: AppLayoutProps) {
+	const [menuOpen, setMenuOpen] = useState(false);
+	const { pathname } = useLocation();
+
+	useEffect(() => {
+		setMenuOpen(false);
+	}, [pathname]);
+
+	useEffect(() => {
+		if (!menuOpen) return;
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') setMenuOpen(false);
+		};
+		document.body.style.overflow = 'hidden';
+		window.addEventListener('keydown', onKeyDown);
+		return () => {
+			document.body.style.overflow = '';
+			window.removeEventListener('keydown', onKeyDown);
+		};
+	}, [menuOpen]);
+
 	return (
-		<div className="flex min-h-screen bg-surface">
-			<Sidebar open={sidebarOpen} onClose={onCloseSidebar} />
-
+		<div className="flex min-h-dvh bg-surface">
+			<Sidebar />
 			<div className="flex min-w-0 flex-1 flex-col">
-				<header className="flex h-site-header items-center gap-3 border-b border-separator bg-surface-elevated px-4 lg:hidden">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={onToggleSidebar}
-						aria-label="Abrir menú"
-					>
-						<Menu className="h-5 w-5" />
-					</Button>
-					<span className="font-semibold text-foreground">Mi Carta</span>
-				</header>
-
-				<main className="flex-1 overflow-auto p-4 lg:p-6">{children}</main>
+				<MobileHeader
+					menuOpen={menuOpen}
+					onToggleMenu={() => setMenuOpen((open) => !open)}
+					onCloseMenu={() => setMenuOpen(false)}
+				/>
+				<main className="flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 lg:p-6">
+					{children}
+				</main>
 			</div>
 		</div>
 	);

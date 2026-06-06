@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from '../components/layout/AppLayout.tsx';
 import CategoriesPage from '../pages/Categories/index.tsx';
@@ -9,14 +8,8 @@ import ProductsPage from '../pages/Products/index.tsx';
 import SettingsPage from '../pages/Settings/index.tsx';
 
 export function AppRoutes() {
-	const [sidebarOpen, setSidebarOpen] = useState(false);
-
 	return (
-		<AppLayout
-			sidebarOpen={sidebarOpen}
-			onToggleSidebar={() => setSidebarOpen((o) => !o)}
-			onCloseSidebar={() => setSidebarOpen(false)}
-		>
+		<AppLayout>
 			<Routes>
 				<Route path="/" element={<DashboardPage />} />
 				<Route path="/carta" element={<ProductsPage />} />

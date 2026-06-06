@@ -1,51 +1,32 @@
 import { Upload } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import { useMenuStore } from '../../store/menuStore.ts';
 import { cn } from '../../utils/cn.ts';
-import {
-	blobToDataUrl,
-	optimizeImage,
-} from '../../utils/imageOptimizer.ts';
-import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
 
 type ImageUploaderProps = {
-	onUploaded?: (imageId: string) => void;
+	onUpload: (file: File) => Promise<void>;
 	className?: string;
 	compact?: boolean;
 };
 
 export function ImageUploader({
-	onUploaded,
+	onUpload,
 	className,
 	compact = false,
 }: ImageUploaderProps) {
 	const [dragging, setDragging] = useState(false);
 	const [uploading, setUploading] = useState(false);
-	const addImage = useMenuStore((s) => s.addImage);
-	const showToast = useAutoSaveToast();
 
 	const processFile = useCallback(
 		async (file: File) => {
 			if (!file.type.startsWith('image/')) return;
 			setUploading(true);
 			try {
-				const { blob, thumbnailBlob } = await optimizeImage(file);
-				const [url, thumbnailUrl] = await Promise.all([
-					blobToDataUrl(blob),
-					blobToDataUrl(thumbnailBlob),
-				]);
-				const id = addImage({
-					name: file.name.replace(/\.[^.]+$/, ''),
-					url,
-					thumbnailUrl,
-				});
-				showToast('Imagen subida');
-				onUploaded?.(id);
+				await onUpload(file);
 			} finally {
 				setUploading(false);
 			}
 		},
-		[addImage, onUploaded, showToast],
+		[onUpload],
 	);
 
 	const handleDrop = useCallback(

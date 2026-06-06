@@ -14,9 +14,9 @@ const buttonVariants = cva(
 				destructive: 'bg-accent-orange text-on-primary hover:opacity-90',
 			},
 			size: {
-				default: 'h-10 px-4 py-2',
-				sm: 'h-8 px-3 text-xs',
-				icon: 'h-9 w-9',
+				default: 'h-11 px-4 py-2 text-base lg:h-10 lg:text-sm',
+				sm: 'h-10 px-3 text-sm lg:h-8 lg:text-xs',
+				icon: 'h-11 w-11 lg:h-9 lg:w-9',
 			},
 		},
 		defaultVariants: {

@@ -63,7 +63,7 @@ export function mapRowsToProducts(
 	rows: ExcelPreviewRow[],
 	mappings: ExcelColumnMapping[],
 	resolveCategoryId: (name: string) => string,
-): Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[] {
+): Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[] {
 	const fieldMap = Object.fromEntries(
 		mappings.map((m) => [m.systemField, m.excelColumn]),
 	);

@@ -20,7 +20,7 @@ export function Select({
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
 			className={cn(
-				'flex h-9 w-full rounded-md border border-border bg-surface-elevated px-3 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+				'flex h-11 w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-base text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary lg:h-9 lg:text-sm',
 				className,
 			)}
 		>

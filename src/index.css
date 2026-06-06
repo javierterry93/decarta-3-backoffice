@@ -50,7 +50,8 @@
 		Helvetica, Arial, sans-serif;
 
 	--spacing-site-header: 3.3125rem;
-	--container-max: 21.875rem;
+	--container-max: 22.5rem;
+	--dialog-content-max: 23.4375rem;
 	--container-max-md: 48rem;
 	--container-max-xl: 80rem;
 
@@ -94,6 +95,18 @@
 	}
 }
 
+@layer components {
+	@media (max-width: 1023px) {
+		.dialog-content {
+			box-sizing: border-box;
+			width: 100%;
+			max-width: min(100%, var(--dialog-content-max));
+			margin-inline: auto;
+			padding-inline: 1rem;
+		}
+	}
+}
+
 @layer base {
 	:root {
 		color-scheme: light;
@@ -107,5 +120,14 @@
 
 	body {
 		@apply bg-surface font-sans text-foreground antialiased;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	@media (max-width: 1023px) {
+		input,
+		select,
+		textarea {
+			font-size: 16px;
+		}
 	}
 }

@@ -1,26 +1,37 @@
 import { useMemo } from 'react';
-import type { PreviewDevice } from '../../types/index.ts';
-import { useMenuStore } from '../../store/menuStore.ts';
+import type {
+	BusinessSettings,
+	Category,
+	MenuImage,
+	PreviewDevice,
+	Product,
+} from '../../types/index.ts';
 import { cn } from '../../utils/cn.ts';
 import { formatPrice } from '../../utils/format.ts';
 
 type MenuPreviewProps = {
 	device: PreviewDevice;
+	products: Product[];
+	categories: Category[];
+	settings: BusinessSettings;
+	images: MenuImage[];
 	className?: string;
 };
 
 const deviceWidths: Record<PreviewDevice, string> = {
-	mobile: 'max-w-sm',
+	mobile: 'w-full max-w-sm',
 	tablet: 'max-w-2xl',
 	desktop: 'max-w-4xl',
 };
 
-export function MenuPreview({ device, className }: MenuPreviewProps) {
-	const products = useMenuStore((s) => s.products);
-	const categories = useMenuStore((s) => s.categories);
-	const settings = useMenuStore((s) => s.settings);
-	const images = useMenuStore((s) => s.images);
-
+export function MenuPreview({
+	device,
+	products,
+	categories,
+	settings,
+	images,
+	className,
+}: MenuPreviewProps) {
 	const imageMap = useMemo(
 		() => Object.fromEntries(images.map((i) => [i.id, i.url])),
 		[images],
@@ -62,9 +73,11 @@ export function MenuPreview({ device, className }: MenuPreviewProps) {
 
 			<div className="p-4">
 				{visibleCategories.map((category) => {
-					const categoryProducts = products.filter(
-						(p) => p.categoryId === category.id && p.visible,
-					);
+					const categoryProducts = products
+						.filter(
+							(p) => p.categoryId === category.id && p.visible,
+						)
+						.sort((a, b) => a.order - b.order);
 					if (categoryProducts.length === 0) return null;
 
 					return (

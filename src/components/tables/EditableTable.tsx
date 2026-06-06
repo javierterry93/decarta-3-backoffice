@@ -74,7 +74,13 @@ export function EditableTable<T extends { id: string }>({
 				className,
 			)}
 		>
-			<table className="w-full min-w-max border-collapse text-sm">
+			<table className="w-full table-fixed border-collapse text-sm">
+				<colgroup>
+					{columns.map((col) => (
+						<col key={col.key} style={col.width ? { width: col.width } : undefined} />
+					))}
+					{rowActions && <col className="w-28" />}
+				</colgroup>
 				<thead>
 					<tr className="border-b border-separator bg-fill">
 						{columns.map((col) => (
@@ -119,7 +125,7 @@ export function EditableTable<T extends { id: string }>({
 									return (
 										<td
 											key={col.key}
-											className="px-4 py-2"
+											className="truncate px-4 py-2"
 											onDoubleClick={() => {
 												if (editable) startEdit(row.id, col.key);
 											}}

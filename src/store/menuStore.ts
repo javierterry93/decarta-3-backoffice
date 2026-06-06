@@ -21,6 +21,7 @@ const defaultProducts: Product[] = [
 		id: 'prod-1',
 		name: 'Patatas Bravas',
 		categoryId: 'cat-1',
+		order: 1,
 		price: 5.5,
 		shortDescription: 'Con salsa brava casera',
 		visible: true,
@@ -32,6 +33,7 @@ const defaultProducts: Product[] = [
 		id: 'prod-2',
 		name: 'Hamburguesa Completa',
 		categoryId: 'cat-2',
+		order: 1,
 		price: 12.5,
 		shortDescription: 'Carne, queso, bacon y huevo',
 		visible: true,
@@ -40,6 +42,20 @@ const defaultProducts: Product[] = [
 		updatedAt: now(),
 	},
 ];
+
+function nextOrderInCategory(
+	products: Product[],
+	categoryId: string,
+): number {
+	return (
+		Math.max(
+			0,
+			...products
+				.filter((p) => p.categoryId === categoryId)
+				.map((p) => p.order ?? 0),
+		) + 1
+	);
+}
 
 const defaultSettings: BusinessSettings = {
 	name: 'Mi Restaurante',
@@ -62,6 +78,7 @@ type MenuState = {
 	updateProduct: (id: string, data: Partial<Product>) => void;
 	duplicateProduct: (id: string) => string;
 	deleteProduct: (id: string) => void;
+	reorderProducts: (categoryId: string, orderedIds: string[]) => void;
 	addCategory: (name?: string) => string;
 	updateCategory: (id: string, data: Partial<Category>) => void;
 	deleteCategory: (id: string) => void;
@@ -69,7 +86,7 @@ type MenuState = {
 	addImage: (image: Omit<MenuImage, 'id' | 'createdAt'>) => string;
 	deleteImage: (id: string) => void;
 	updateSettings: (data: Partial<BusinessSettings>) => void;
-	importProducts: (items: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>[]) => void;
+	importProducts: (items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[]) => void;
 };
 
 export const useMenuStore = create<MenuState>()(
@@ -85,10 +102,12 @@ export const useMenuStore = create<MenuState>()(
 				const id = generateId();
 				const timestamp = now();
 				const firstCategory = get().categories[0]?.id ?? '';
+				const categoryId = partial.categoryId ?? firstCategory;
 				const product: Product = {
 					id,
 					name: '',
-					categoryId: firstCategory,
+					categoryId,
+					order: nextOrderInCategory(get().products, categoryId),
 					price: 0,
 					shortDescription: '',
 					visible: true,
@@ -106,9 +125,26 @@ export const useMenuStore = create<MenuState>()(
 
 			updateProduct: (id, data) => {
 				const timestamp = now();
+				const current = get().products.find((p) => p.id === id);
+				let patch = { ...data };
+				if (
+					current &&
+					data.categoryId &&
+					data.categoryId !== current.categoryId
+				) {
+					patch = {
+						...patch,
+						order: nextOrderInCategory(
+							get().products.filter((p) => p.id !== id),
+							data.categoryId,
+						),
+					};
+				}
 				set((state) => ({
 					products: state.products.map((p) =>
-						p.id === id ? { ...p, ...data, updatedAt: timestamp } : p,
+						p.id === id
+							? { ...p, ...patch, updatedAt: timestamp }
+							: p,
 					),
 					lastModified: timestamp,
 				}));
@@ -123,6 +159,7 @@ export const useMenuStore = create<MenuState>()(
 					...source,
 					id: newId,
 					name: `${source.name} (copia)`,
+					order: nextOrderInCategory(get().products, source.categoryId),
 					createdAt: timestamp,
 					updatedAt: timestamp,
 				};
@@ -136,6 +173,17 @@ export const useMenuStore = create<MenuState>()(
 			deleteProduct: (id) => {
 				set((state) => ({
 					products: state.products.filter((p) => p.id !== id),
+					lastModified: now(),
+				}));
+			},
+
+			reorderProducts: (categoryId, orderedIds) => {
+				set((state) => ({
+					products: state.products.map((p) => {
+						if (p.categoryId !== categoryId) return p;
+						const index = orderedIds.indexOf(p.id);
+						return index >= 0 ? { ...p, order: index + 1 } : p;
+					}),
 					lastModified: now(),
 				}));
 			},
@@ -218,18 +266,58 @@ export const useMenuStore = create<MenuState>()(
 
 			importProducts: (items) => {
 				const timestamp = now();
-				const newProducts: Product[] = items.map((item) => ({
-					...item,
-					id: generateId(),
-					createdAt: timestamp,
-					updatedAt: timestamp,
-				}));
+				const runningProducts = [...get().products];
+				const newProducts: Product[] = items.map((item) => {
+					const order = nextOrderInCategory(
+						runningProducts,
+						item.categoryId,
+					);
+					const product: Product = {
+						...item,
+						order,
+						id: generateId(),
+						createdAt: timestamp,
+						updatedAt: timestamp,
+					};
+					runningProducts.push(product);
+					return product;
+				});
 				set((state) => ({
 					products: [...state.products, ...newProducts],
 					lastModified: timestamp,
 				}));
 			},
 		}),
-		{ name: 'decarta-menu-store' },
+		{
+			name: 'decarta-menu-store',
+			version: 1,
+			migrate: (persisted, version) => {
+				const state = persisted as { products?: Product[] };
+				if (version < 1 && state.products) {
+					const byCategory = new Map<string, Product[]>();
+					for (const product of state.products) {
+						const list = byCategory.get(product.categoryId) ?? [];
+						list.push(product);
+						byCategory.set(product.categoryId, list);
+					}
+					const orderById = new Map<string, number>();
+					for (const [, list] of byCategory) {
+						list
+							.sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+							.forEach((product, index) => {
+								orderById.set(product.id, product.order ?? index + 1);
+							});
+					}
+					return {
+						...state,
+						products: state.products.map((product) => ({
+							...product,
+							order: orderById.get(product.id) ?? product.order ?? 1,
+						})),
+					};
+				}
+				return persisted;
+			},
+		},
 	),
 );

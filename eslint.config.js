@@ -19,4 +19,38 @@ export default defineConfig([
 			globals: globals.browser,
 		},
 	},
+	{
+		files: ['src/components/**/*.{ts,tsx}', 'src/layouts/**/*.{ts,tsx}'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['**/services/**', '**/store/**'],
+							message:
+								'Solo las pages pueden importar services o store. Usa props/callbacks.',
+						},
+					],
+				},
+			],
+		},
+	},
+	{
+		files: ['src/services/**/*.{ts,tsx}'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['**/components/**', '**/layouts/**', 'react'],
+							message:
+								'Los services no deben importar React ni componentes UI.',
+						},
+					],
+				},
+			],
+		},
+	},
 ]);

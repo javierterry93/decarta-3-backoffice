@@ -3,19 +3,28 @@ import { Dialog } from './ConfirmDialog.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Label } from '../ui/Label.tsx';
 import { Select } from '../ui/Select.tsx';
-import {
-	guessColumnMappings,
-	mapRowsToProducts,
-	parseExcelFile,
-	type ExcelPreviewRow,
-} from '../../services/excelService.ts';
-import type { ExcelColumnMapping } from '../../types/index.ts';
-import { useMenuStore } from '../../store/menuStore.ts';
-import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import type { ExcelColumnMapping, Product } from '../../types/index.ts';
+
+type ExcelPreviewRow = Record<string, string | number>;
 
 type ExcelImportDialogProps = {
 	open: boolean;
 	onClose: () => void;
+	parseExcelFile: (file: File) => Promise<{
+		columns: string[];
+		rows: ExcelPreviewRow[];
+	}>;
+	guessColumnMappings: (columns: string[]) => ExcelColumnMapping[];
+	mapRowsToProducts: (
+		rows: ExcelPreviewRow[],
+		mappings: ExcelColumnMapping[],
+		resolveCategoryId: (name: string) => string,
+	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
+	onResolveCategoryId: (name: string) => string;
+	onImport: (
+		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
+	) => void;
+	onParseError?: () => void;
 };
 
 type Step = 'upload' | 'mapping' | 'preview';
@@ -29,16 +38,20 @@ const systemFields: { value: ExcelColumnMapping['systemField']; label: string }[
 		{ value: 'skip', label: 'Ignorar' },
 	];
 
-export function ExcelImportDialog({ open, onClose }: ExcelImportDialogProps) {
+export function ExcelImportDialog({
+	open,
+	onClose,
+	parseExcelFile,
+	guessColumnMappings,
+	mapRowsToProducts,
+	onResolveCategoryId,
+	onImport,
+	onParseError,
+}: ExcelImportDialogProps) {
 	const [step, setStep] = useState<Step>('upload');
 	const [columns, setColumns] = useState<string[]>([]);
 	const [rows, setRows] = useState<ExcelPreviewRow[]>([]);
 	const [mappings, setMappings] = useState<ExcelColumnMapping[]>([]);
-
-	const categories = useMenuStore((s) => s.categories);
-	const addCategory = useMenuStore((s) => s.addCategory);
-	const importProducts = useMenuStore((s) => s.importProducts);
-	const showToast = useAutoSaveToast();
 
 	const reset = useCallback(() => {
 		setStep('upload');
@@ -63,32 +76,23 @@ export function ExcelImportDialog({ open, onClose }: ExcelImportDialogProps) {
 				setMappings(guessColumnMappings(result.columns));
 				setStep('mapping');
 			} catch {
-				showToast('No se pudo leer el archivo');
+				onParseError?.();
 			}
 			e.target.value = '';
 		},
-		[showToast],
+		[parseExcelFile, guessColumnMappings, onParseError],
 	);
 
-	const resolveCategoryId = useCallback(
-		(name: string) => {
-			if (!name.trim()) return categories[0]?.id ?? '';
-			const existing = categories.find(
-				(c) => c.name.toLowerCase() === name.toLowerCase(),
-			);
-			if (existing) return existing.id;
-			return addCategory(name.trim());
-		},
-		[categories, addCategory],
+	const previewProducts = mapRowsToProducts(
+		rows,
+		mappings,
+		onResolveCategoryId,
 	);
-
-	const previewProducts = mapRowsToProducts(rows, mappings, resolveCategoryId);
 
 	const handleImport = useCallback(() => {
-		importProducts(previewProducts);
-		showToast(`${previewProducts.length} productos importados`);
+		onImport(previewProducts);
 		handleClose();
-	}, [importProducts, previewProducts, showToast, handleClose]);
+	}, [onImport, previewProducts, handleClose]);
 
 	return (
 		<Dialog open={open} onClose={handleClose} title="Importar desde Excel">
@@ -125,7 +129,7 @@ export function ExcelImportDialog({ open, onClose }: ExcelImportDialogProps) {
 							return (
 								<div
 									key={col}
-									className="grid grid-cols-2 items-center gap-4"
+									className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 sm:gap-4"
 								>
 									<Label>{col}</Label>
 									<Select
