@@ -78,8 +78,7 @@ export function CategoriesLayout({
 					onClick={() => {
 						onAddCategory();
 						onNotify('Nueva categoría añadida');
-					}}
-				>
+					}}>
 					<Plus className="h-4 w-4" />
 					Nueva categoría
 				</Button>
@@ -103,8 +102,7 @@ export function CategoriesLayout({
 							variant="ghost"
 							size="sm"
 							onClick={() => setDeleteId(cat.id)}
-							className="text-accent-orange"
-						>
+							className="text-accent-orange">
 							<Trash2 className="h-3 w-3" />
 							Eliminar {cat.name || 'sin nombre'}
 						</Button>

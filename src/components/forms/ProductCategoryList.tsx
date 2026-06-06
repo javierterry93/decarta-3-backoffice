@@ -30,10 +30,7 @@ function CategoryProductTable(props: CategoryProductTableProps) {
 
 	return (
 		<section className="space-y-3">
-			<CategorySectionHeader
-				category={category}
-				productCount={products.length}
-			/>
+			<CategorySectionHeader category={category} productCount={products.length} />
 			{isLg ? (
 				<DesktopCategoryProductTable {...props} />
 			) : (

@@ -1,9 +1,4 @@
-import {
-	ClipboardList,
-	EyeOff,
-	FolderOpen,
-	Package,
-} from 'lucide-react';
+import { ClipboardList, EyeOff, FolderOpen, Package } from 'lucide-react';
 import { NavLink, useLocation, type Location } from 'react-router-dom';
 import { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 import {
@@ -78,9 +73,7 @@ export function DashboardLayout({
 		<MobilePageLayout>
 			<div className="hidden lg:block">
 				<h1 className="text-2xl font-bold text-foreground">Inicio</h1>
-				<p className="mt-1 text-foreground-muted">
-					Resumen de tu carta digital
-				</p>
+				<p className="mt-1 text-foreground-muted">Resumen de tu carta digital</p>
 			</div>
 
 			<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -96,18 +89,13 @@ export function DashboardLayout({
 									'border-primary/30 ring-1 ring-primary/20',
 							)
 						}
-						aria-label={`${label}: ${value}`}
-					>
+						aria-label={`${label}: ${value}`}>
 						<CardHeader className="mb-0">
 							<div className="flex items-center justify-between">
 								<CardDescription>{label}</CardDescription>
 								<Icon className={`h-5 w-5 ${color}`} aria-hidden />
 							</div>
-							<CardTitle
-								className={
-									isText ? 'text-base font-medium' : 'text-3xl'
-								}
-							>
+							<CardTitle className={isText ? 'text-base font-medium' : 'text-3xl'}>
 								{value}
 							</CardTitle>
 						</CardHeader>

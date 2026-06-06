@@ -76,8 +76,7 @@ function SortableDesktopRow({
 				'border-b border-separator last:border-0',
 				isDragging && 'bg-fill opacity-80',
 				selected && 'bg-primary/5',
-			)}
-		>
+			)}>
 			<td className="px-3 py-2">
 				<input
 					type="checkbox"
@@ -93,8 +92,7 @@ function SortableDesktopRow({
 					className="flex min-h-11 min-w-11 cursor-grab items-center justify-center rounded-lg text-foreground-muted hover:bg-fill active:cursor-grabbing"
 					{...attributes}
 					{...listeners}
-					aria-label="Arrastrar para reordenar"
-				>
+					aria-label="Arrastrar para reordenar">
 					<GripVertical className="h-4 w-4" />
 				</button>
 			</td>
@@ -162,8 +160,7 @@ export function DesktopCategoryProductTable({
 		<DndContext
 			sensors={sensors}
 			collisionDetection={closestCenter}
-			onDragEnd={handleDragEnd}
-		>
+			onDragEnd={handleDragEnd}>
 			<SortableContext items={ids} strategy={verticalListSortingStrategy}>
 				<div className="overflow-x-auto rounded-xl border border-separator bg-surface-elevated">
 					<table className="w-full table-fixed border-collapse text-sm">
@@ -217,11 +214,7 @@ export function DesktopCategoryProductTable({
 								<SortableDesktopRow
 									key={product.id}
 									product={product}
-									imageUrl={
-										product.imageId
-											? imageMap[product.imageId]
-											: undefined
-									}
+									imageUrl={product.imageId ? imageMap[product.imageId] : undefined}
 									selected={selectedIds.has(product.id)}
 									onSelect={(checked) => toggleOne(product.id, checked)}
 									onEdit={() => onEdit(product.id)}

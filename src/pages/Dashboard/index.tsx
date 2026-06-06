@@ -1,16 +1,21 @@
-import { useMenuStore } from '../../store/menuStore.ts';
+import {
+	PageError,
+	PageLoading,
+} from '../../components/layout/PageLoading.tsx';
+import { useMenu } from '../../hooks/useMenu.ts';
 import { DashboardLayout } from '../../layouts/DashboardLayout.tsx';
 
 export default function DashboardPage() {
-	const products = useMenuStore((s) => s.products);
-	const categories = useMenuStore((s) => s.categories);
-	const lastModified = useMenuStore((s) => s.lastModified);
+	const { data: menu, isLoading, error } = useMenu();
+
+	if (isLoading) return <PageLoading />;
+	if (error || !menu) return <PageError />;
 
 	return (
 		<DashboardLayout
-			products={products}
-			categories={categories}
-			lastModified={lastModified}
+			products={menu.products}
+			categories={menu.categories}
+			lastModified={menu.lastModified}
 		/>
 	);
 }

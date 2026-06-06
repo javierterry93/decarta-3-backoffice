@@ -21,8 +21,7 @@ export function parseExcelFile(file: File): Promise<{
 				const json = XLSX.utils.sheet_to_json<ExcelPreviewRow>(sheet, {
 					defval: '',
 				});
-				const columns =
-					json.length > 0 ? Object.keys(json[0] ?? {}) : [];
+				const columns = json.length > 0 ? Object.keys(json[0] ?? {}) : [];
 				resolve({ columns, rows: json });
 			} catch {
 				reject(new Error('No se pudo leer el archivo'));
@@ -34,10 +33,7 @@ export function parseExcelFile(file: File): Promise<{
 }
 
 export function guessColumnMappings(columns: string[]): ExcelColumnMapping[] {
-	const patterns: Record<
-		ExcelColumnMapping['systemField'],
-		RegExp[]
-	> = {
+	const patterns: Record<ExcelColumnMapping['systemField'], RegExp[]> = {
 		name: [/nombre/i, /producto/i, /name/i, /plato/i],
 		price: [/precio/i, /price/i, /pvp/i],
 		category: [/categor/i, /tipo/i, /sección/i, /section/i],
@@ -77,9 +73,7 @@ export function mapRowsToProducts(
 			const name = String(row[fieldMap.name ?? ''] ?? '').trim();
 			const priceRaw = row[fieldMap.price ?? ''];
 			const price = parseFloat(String(priceRaw).replace(',', '.')) || 0;
-			const categoryName = String(
-				row[fieldMap.category ?? ''] ?? '',
-			).trim();
+			const categoryName = String(row[fieldMap.category ?? ''] ?? '').trim();
 			const shortDescription = String(
 				row[fieldMap.description ?? ''] ?? '',
 			).trim();
@@ -99,9 +93,7 @@ export function exportToExcel(
 	products: Product[],
 	categories: { id: string; name: string }[],
 ): void {
-	const categoryMap = Object.fromEntries(
-		categories.map((c) => [c.id, c.name]),
-	);
+	const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 	const data = products.map((p) => ({
 		Nombre: p.name,
 		Categoría: categoryMap[p.categoryId] ?? '',
@@ -119,9 +111,7 @@ export function exportToCsv(
 	products: Product[],
 	categories: { id: string; name: string }[],
 ): void {
-	const categoryMap = Object.fromEntries(
-		categories.map((c) => [c.id, c.name]),
-	);
+	const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 	const data = products.map((p) => ({
 		Nombre: p.name,
 		Categoría: categoryMap[p.categoryId] ?? '',

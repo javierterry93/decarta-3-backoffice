@@ -11,8 +11,7 @@ export function Card({ children, className }: CardProps) {
 			className={cn(
 				'rounded-xl border border-separator bg-surface-elevated p-6 shadow-sm',
 				className,
-			)}
-		>
+			)}>
 			{children}
 		</div>
 	);
@@ -26,9 +25,7 @@ export function CardHeader({
 	className?: string;
 }) {
 	return (
-		<div className={cn('mb-4 flex flex-col gap-1', className)}>
-			{children}
-		</div>
+		<div className={cn('mb-4 flex flex-col gap-1', className)}>{children}</div>
 	);
 }
 
@@ -54,8 +51,6 @@ export function CardDescription({
 	className?: string;
 }) {
 	return (
-		<p className={cn('text-sm text-foreground-muted', className)}>
-			{children}
-		</p>
+		<p className={cn('text-sm text-foreground-muted', className)}>{children}</p>
 	);
 }

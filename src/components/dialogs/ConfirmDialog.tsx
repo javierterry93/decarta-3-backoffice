@@ -67,8 +67,7 @@ function ModalFrame({
 			)}
 			role="dialog"
 			aria-modal="true"
-			aria-labelledby={ariaLabelledBy}
-		>
+			aria-labelledby={ariaLabelledBy}>
 			<button
 				type="button"
 				className={cn(
@@ -90,9 +89,7 @@ function ModalFrame({
 					visible
 						? cn(
 								'opacity-100 lg:scale-100',
-								isFullscreenMobile
-									? 'max-lg:translate-y-0'
-									: 'translate-y-0',
+								isFullscreenMobile ? 'max-lg:translate-y-0' : 'translate-y-0',
 							)
 						: cn(
 								'opacity-0 lg:translate-y-1 lg:scale-[0.98]',
@@ -102,8 +99,7 @@ function ModalFrame({
 							),
 					panelClassName,
 				)}
-				style={{ transitionDuration: `${MODAL_DURATION_MS}ms` }}
-			>
+				style={{ transitionDuration: `${MODAL_DURATION_MS}ms` }}>
 				{children}
 			</div>
 		</div>
@@ -134,12 +130,8 @@ export function ConfirmDialog({
 			open={open}
 			onClose={onCancel}
 			ariaLabelledBy="confirm-title"
-			panelClassName="mx-auto max-w-md rounded-xl border border-separator bg-surface-elevated p-5 shadow-lg lg:p-6 max-lg:rounded-b-none"
-		>
-			<h2
-				id="confirm-title"
-				className="text-lg font-semibold text-foreground"
-			>
+			panelClassName="mx-auto max-w-md rounded-xl border border-separator bg-surface-elevated p-5 shadow-lg lg:p-6 max-lg:rounded-b-none">
+			<h2 id="confirm-title" className="text-lg font-semibold text-foreground">
 				{title}
 			</h2>
 			<p className="mt-2 text-sm text-foreground-muted">{description}</p>
@@ -147,7 +139,10 @@ export function ConfirmDialog({
 				<Button variant="outline" onClick={onCancel} className="w-full lg:w-auto">
 					{cancelLabel}
 				</Button>
-				<Button variant="destructive" onClick={onConfirm} className="w-full lg:w-auto">
+				<Button
+					variant="destructive"
+					onClick={onConfirm}
+					className="w-full lg:w-auto">
 					{confirmLabel}
 				</Button>
 			</div>
@@ -184,23 +179,17 @@ export function Dialog({
 				'lg:max-h-[90vh] lg:max-w-2xl lg:overflow-y-auto lg:rounded-xl lg:p-6',
 				!fullScreenMobile && 'max-lg:rounded-b-none p-5 max-lg:p-5',
 				className,
-			)}
-		>
+			)}>
 			<div
 				className={cn(
 					fullScreenMobile &&
 						'dialog-content flex min-h-0 w-full flex-1 flex-col pt-[max(1rem,env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] lg:max-w-none lg:p-0 lg:pt-0 lg:pb-0',
 					!fullScreenMobile && 'contents',
-				)}
-			>
+				)}>
 				<h2 className="mb-4 shrink-0 text-lg font-semibold text-foreground">
 					{title}
 				</h2>
-				<div
-					className={cn(
-						fullScreenMobile && 'flex min-h-0 flex-1 flex-col',
-					)}
-				>
+				<div className={cn(fullScreenMobile && 'flex min-h-0 flex-1 flex-col')}>
 					{children}
 				</div>
 			</div>

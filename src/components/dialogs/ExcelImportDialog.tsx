@@ -29,14 +29,16 @@ type ExcelImportDialogProps = {
 
 type Step = 'upload' | 'mapping' | 'preview';
 
-const systemFields: { value: ExcelColumnMapping['systemField']; label: string }[] =
-	[
-		{ value: 'name', label: 'Nombre' },
-		{ value: 'price', label: 'Precio' },
-		{ value: 'category', label: 'Categoría' },
-		{ value: 'description', label: 'Descripción' },
-		{ value: 'skip', label: 'Ignorar' },
-	];
+const systemFields: {
+	value: ExcelColumnMapping['systemField'];
+	label: string;
+}[] = [
+	{ value: 'name', label: 'Nombre' },
+	{ value: 'price', label: 'Precio' },
+	{ value: 'category', label: 'Categoría' },
+	{ value: 'description', label: 'Descripción' },
+	{ value: 'skip', label: 'Ignorar' },
+];
 
 export function ExcelImportDialog({
 	open,
@@ -83,11 +85,7 @@ export function ExcelImportDialog({
 		[parseExcelFile, guessColumnMappings, onParseError],
 	);
 
-	const previewProducts = mapRowsToProducts(
-		rows,
-		mappings,
-		onResolveCategoryId,
-	);
+	const previewProducts = mapRowsToProducts(rows, mappings, onResolveCategoryId);
 
 	const handleImport = useCallback(() => {
 		onImport(previewProducts);
@@ -99,8 +97,8 @@ export function ExcelImportDialog({
 			{step === 'upload' && (
 				<div className="space-y-4">
 					<p className="text-sm text-foreground-muted">
-						Sube un archivo Excel (.xlsx) con tu carta. Detectaremos
-						las columnas automáticamente.
+						Sube un archivo Excel (.xlsx) con tu carta. Detectaremos las columnas
+						automáticamente.
 					</p>
 					<label className="flex cursor-pointer flex-col items-center rounded-xl border-2 border-dashed border-border bg-fill p-8">
 						<input
@@ -123,14 +121,11 @@ export function ExcelImportDialog({
 					</p>
 					<div className="space-y-3">
 						{columns.map((col) => {
-							const mapping = mappings.find(
-								(m) => m.excelColumn === col,
-							);
+							const mapping = mappings.find((m) => m.excelColumn === col);
 							return (
 								<div
 									key={col}
-									className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 sm:gap-4"
-								>
+									className="grid grid-cols-1 items-center gap-2 sm:grid-cols-2 sm:gap-4">
 									<Label>{col}</Label>
 									<Select
 										value={mapping?.systemField ?? 'skip'}
@@ -140,8 +135,7 @@ export function ExcelImportDialog({
 													m.excelColumn === col
 														? {
 																...m,
-																systemField:
-																	v as ExcelColumnMapping['systemField'],
+																systemField: v as ExcelColumnMapping['systemField'],
 															}
 														: m,
 												),
@@ -160,9 +154,7 @@ export function ExcelImportDialog({
 						<Button variant="outline" onClick={handleClose}>
 							Cancelar
 						</Button>
-						<Button onClick={() => setStep('preview')}>
-							Vista previa
-						</Button>
+						<Button onClick={() => setStep('preview')}>Vista previa</Button>
 					</div>
 				</div>
 			)}
@@ -178,22 +170,15 @@ export function ExcelImportDialog({
 								<tr>
 									<th className="px-3 py-2 text-left">Nombre</th>
 									<th className="px-3 py-2 text-left">Precio</th>
-									<th className="px-3 py-2 text-left">
-										Descripción
-									</th>
+									<th className="px-3 py-2 text-left">Descripción</th>
 								</tr>
 							</thead>
 							<tbody>
 								{previewProducts.slice(0, 20).map((p, i) => (
-									<tr
-										key={i}
-										className="border-t border-separator"
-									>
+									<tr key={i} className="border-t border-separator">
 										<td className="px-3 py-2">{p.name}</td>
 										<td className="px-3 py-2">{p.price}€</td>
-										<td className="px-3 py-2">
-											{p.shortDescription}
-										</td>
+										<td className="px-3 py-2">{p.shortDescription}</td>
 									</tr>
 								))}
 							</tbody>

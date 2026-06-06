@@ -73,8 +73,7 @@ function SortableMobileRow({
 				isDragging &&
 					'relative z-10 mx-1 rounded-xl border border-separator bg-surface-elevated shadow-md',
 				selected && 'bg-primary/5 ring-1 ring-inset ring-primary/20',
-			)}
-		>
+			)}>
 			<input
 				type="checkbox"
 				checked={selected}
@@ -88,15 +87,13 @@ function SortableMobileRow({
 				className="flex h-9 w-9 shrink-0 cursor-grab items-center justify-center rounded-lg text-foreground-muted/70 active:cursor-grabbing active:bg-fill"
 				{...attributes}
 				{...listeners}
-				aria-label="Arrastrar para reordenar"
-			>
+				aria-label="Arrastrar para reordenar">
 				<GripVertical className="h-4 w-4" />
 			</button>
 			<button
 				type="button"
 				className="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-1 py-2 text-left active:bg-fill"
-				onClick={onEdit}
-			>
+				onClick={onEdit}>
 				<span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
 					{product.name || (
 						<span className="font-normal text-foreground-muted italic">
@@ -108,8 +105,7 @@ function SortableMobileRow({
 					className={cn(
 						MOBILE_PRICE_COL,
 						'shrink-0 text-right text-sm font-semibold tabular-nums text-foreground',
-					)}
-				>
+					)}>
 					{formatPrice(product.price)}
 				</span>
 				<span className={cn(MOBILE_STATUS_COL, 'flex shrink-0 justify-end')}>
@@ -157,8 +153,7 @@ export function MobileCategoryProductTable({
 		<DndContext
 			sensors={sensors}
 			collisionDetection={closestCenter}
-			onDragEnd={handleDragEnd}
-		>
+			onDragEnd={handleDragEnd}>
 			<SortableContext items={ids} strategy={verticalListSortingStrategy}>
 				<div className="overflow-hidden rounded-2xl border border-separator bg-surface-elevated shadow-sm">
 					<div className="flex items-center gap-1 border-b border-separator/60 bg-fill/50 px-3 py-2.5">

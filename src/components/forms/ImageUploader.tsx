@@ -61,8 +61,7 @@ export function ImageUploader({
 				setDragging(true);
 			}}
 			onDragLeave={() => setDragging(false)}
-			onDrop={handleDrop}
-		>
+			onDrop={handleDrop}>
 			<input
 				type="file"
 				accept="image/*"
@@ -71,10 +70,7 @@ export function ImageUploader({
 				disabled={uploading}
 			/>
 			<Upload
-				className={cn(
-					'text-foreground-muted',
-					compact ? 'h-6 w-6' : 'h-10 w-10',
-				)}
+				className={cn('text-foreground-muted', compact ? 'h-6 w-6' : 'h-10 w-10')}
 				aria-hidden
 			/>
 			<span className="mt-2 text-sm font-medium text-foreground">

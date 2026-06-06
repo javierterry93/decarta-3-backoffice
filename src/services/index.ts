@@ -1,6 +1,14 @@
 export { menuService } from './menuService.ts';
 export { uploadImage } from './imageService.ts';
 export {
+	getMenuApiClient,
+	getMenuApiMode,
+	MenuApiError,
+	menuQueryKey,
+	type MenuApiClient,
+	type MenuSnapshot,
+} from '../api/index.ts';
+export {
 	exportToCsv,
 	exportToExcel,
 	guessColumnMappings,

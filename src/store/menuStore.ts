@@ -43,10 +43,7 @@ const defaultProducts: Product[] = [
 	},
 ];
 
-function nextOrderInCategory(
-	products: Product[],
-	categoryId: string,
-): number {
+function nextOrderInCategory(products: Product[], categoryId: string): number {
 	return (
 		Math.max(
 			0,
@@ -86,7 +83,9 @@ type MenuState = {
 	addImage: (image: Omit<MenuImage, 'id' | 'createdAt'>) => string;
 	deleteImage: (id: string) => void;
 	updateSettings: (data: Partial<BusinessSettings>) => void;
-	importProducts: (items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[]) => void;
+	importProducts: (
+		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
+	) => void;
 };
 
 export const useMenuStore = create<MenuState>()(
@@ -127,11 +126,7 @@ export const useMenuStore = create<MenuState>()(
 				const timestamp = now();
 				const current = get().products.find((p) => p.id === id);
 				let patch = { ...data };
-				if (
-					current &&
-					data.categoryId &&
-					data.categoryId !== current.categoryId
-				) {
+				if (current && data.categoryId && data.categoryId !== current.categoryId) {
 					patch = {
 						...patch,
 						order: nextOrderInCategory(
@@ -142,9 +137,7 @@ export const useMenuStore = create<MenuState>()(
 				}
 				set((state) => ({
 					products: state.products.map((p) =>
-						p.id === id
-							? { ...p, ...patch, updatedAt: timestamp }
-							: p,
+						p.id === id ? { ...p, ...patch, updatedAt: timestamp } : p,
 					),
 					lastModified: timestamp,
 				}));
@@ -190,8 +183,7 @@ export const useMenuStore = create<MenuState>()(
 
 			addCategory: (name = '') => {
 				const id = generateId();
-				const order =
-					Math.max(0, ...get().categories.map((c) => c.order)) + 1;
+				const order = Math.max(0, ...get().categories.map((c) => c.order)) + 1;
 				const category: Category = { id, name, order, visible: true };
 				set((state) => ({
 					categories: [...state.categories, category],
@@ -268,10 +260,7 @@ export const useMenuStore = create<MenuState>()(
 				const timestamp = now();
 				const runningProducts = [...get().products];
 				const newProducts: Product[] = items.map((item) => {
-					const order = nextOrderInCategory(
-						runningProducts,
-						item.categoryId,
-					);
+					const order = nextOrderInCategory(runningProducts, item.categoryId);
 					const product: Product = {
 						...item,
 						order,

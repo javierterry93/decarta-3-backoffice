@@ -54,8 +54,7 @@ export function ImagesLayout({
 					{images.map((image) => (
 						<div
 							key={image.id}
-							className="overflow-hidden rounded-xl border border-separator bg-surface-elevated"
-						>
+							className="overflow-hidden rounded-xl border border-separator bg-surface-elevated">
 							<img
 								src={image.url}
 								alt={image.name}
@@ -63,27 +62,18 @@ export function ImagesLayout({
 							/>
 							<div className="flex items-center justify-between p-3">
 								<div className="min-w-0">
-									<p className="truncate font-medium text-foreground">
-										{image.name}
-									</p>
+									<p className="truncate font-medium text-foreground">{image.name}</p>
 									<p className="text-xs text-foreground-muted">
-										{productCountByImage[image.id] ?? 0}{' '}
-										producto
-										{(productCountByImage[image.id] ?? 0) !== 1
-											? 's'
-											: ''}{' '}
-										asociado
-										{(productCountByImage[image.id] ?? 0) !== 1
-											? 's'
-											: ''}
+										{productCountByImage[image.id] ?? 0} producto
+										{(productCountByImage[image.id] ?? 0) !== 1 ? 's' : ''} asociado
+										{(productCountByImage[image.id] ?? 0) !== 1 ? 's' : ''}
 									</p>
 								</div>
 								<Button
 									variant="ghost"
 									size="icon"
 									onClick={() => setDeleteId(image.id)}
-									aria-label="Eliminar imagen"
-								>
+									aria-label="Eliminar imagen">
 									<Trash2 className="h-4 w-4 text-accent-orange" />
 								</Button>
 							</div>

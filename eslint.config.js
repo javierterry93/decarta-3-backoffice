@@ -45,8 +45,7 @@ export default defineConfig([
 					patterns: [
 						{
 							group: ['**/components/**', '**/layouts/**', 'react'],
-							message:
-								'Los services no deben importar React ni componentes UI.',
+							message: 'Los services no deben importar React ni componentes UI.',
 						},
 					],
 				},

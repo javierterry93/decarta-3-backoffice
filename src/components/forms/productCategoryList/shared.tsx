@@ -71,11 +71,8 @@ export function ProductVisibilityBadge({
 			className={cn(
 				'inline-flex shrink-0 rounded-full font-medium',
 				compact ? 'px-1.5 py-0.5 text-[10px] leading-none' : 'px-2 py-0.5 text-xs',
-				visible
-					? 'bg-success/10 text-success'
-					: 'bg-fill text-foreground-muted',
-			)}
-		>
+				visible ? 'bg-success/10 text-success' : 'bg-fill text-foreground-muted',
+			)}>
 			{visible ? 'Visible' : 'Oculto'}
 		</span>
 	);
@@ -97,8 +94,7 @@ export function ProductRowActions({
 				size="icon"
 				onClick={onEdit}
 				aria-label="Editar producto"
-				title="Editar"
-			>
+				title="Editar">
 				<Pencil className="h-4 w-4" />
 			</Button>
 			<Button
@@ -106,8 +102,7 @@ export function ProductRowActions({
 				size="icon"
 				onClick={onDuplicate}
 				aria-label="Duplicar producto"
-				title="Duplicar"
-			>
+				title="Duplicar">
 				<Copy className="h-4 w-4" />
 			</Button>
 			<Button
@@ -115,8 +110,7 @@ export function ProductRowActions({
 				size="icon"
 				onClick={onDelete}
 				aria-label="Eliminar producto"
-				title="Eliminar"
-			>
+				title="Eliminar">
 				<Trash2 className="h-4 w-4 text-accent-orange" />
 			</Button>
 		</div>

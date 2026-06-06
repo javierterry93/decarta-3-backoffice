@@ -61,8 +61,7 @@ export function ProductEditLayout({
 				e.preventDefault();
 				if (!canSave) return;
 				onSave(draft);
-			}}
-		>
+			}}>
 			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-0.5 pb-4">
 				<div className="space-y-2">
 					<Label htmlFor="product-name">Nombre</Label>
@@ -98,9 +97,7 @@ export function ProductEditLayout({
 						min="0"
 						inputMode="decimal"
 						value={String(draft.price)}
-						onChange={(e) =>
-							patch({ price: parseFloat(e.target.value) || 0 })
-						}
+						onChange={(e) => patch({ price: parseFloat(e.target.value) || 0 })}
 					/>
 				</div>
 
@@ -123,9 +120,7 @@ export function ProductEditLayout({
 					/>
 					{draft.imageId && (
 						<img
-							src={
-								images.find((i) => i.id === draft.imageId)?.thumbnailUrl
-							}
+							src={images.find((i) => i.id === draft.imageId)?.thumbnailUrl}
 							alt=""
 							className="mt-2 h-16 w-16 rounded object-cover"
 						/>
@@ -146,8 +141,7 @@ export function ProductEditLayout({
 								variant="outline"
 								size="sm"
 								className="flex-1"
-								onClick={onDuplicate}
-							>
+								onClick={onDuplicate}>
 								<Copy className="h-4 w-4 shrink-0" aria-hidden />
 								Duplicar
 							</Button>
@@ -158,8 +152,7 @@ export function ProductEditLayout({
 								variant="outline"
 								size="sm"
 								className="flex-1 text-accent-orange"
-								onClick={onDelete}
-							>
+								onClick={onDelete}>
 								<Trash2 className="h-4 w-4 shrink-0" aria-hidden />
 								Eliminar
 							</Button>
@@ -173,8 +166,7 @@ export function ProductEditLayout({
 					type="button"
 					variant="outline"
 					onClick={onCancel}
-					className="w-full lg:w-auto"
-				>
+					className="w-full lg:w-auto">
 					Cancelar
 				</Button>
 				<Button type="submit" disabled={!canSave} className="w-full lg:w-auto">

@@ -160,8 +160,7 @@ export function ProductsLayout({
 						onClick={() => {
 							onExportExcel();
 							onNotify('Carta exportada a Excel');
-						}}
-					>
+						}}>
 						<Download className="h-4 w-4" />
 						Exportar
 					</Button>
@@ -171,8 +170,7 @@ export function ProductsLayout({
 						onClick={() => {
 							onExportCsv();
 							onNotify('Carta exportada a CSV');
-						}}
-					>
+						}}>
 						CSV
 					</Button>
 					<Button onClick={() => setEditor({ mode: 'create' })}>
@@ -184,8 +182,7 @@ export function ProductsLayout({
 				<Button
 					variant="outline"
 					className="w-full lg:hidden"
-					onClick={() => setActionsOpen(true)}
-				>
+					onClick={() => setActionsOpen(true)}>
 					<MoreHorizontal className="h-4 w-4" />
 					Importar / exportar
 				</Button>
@@ -197,11 +194,7 @@ export function ProductsLayout({
 						Filtro: productos ocultos
 					</p>
 					{onClearVisibilityFilter && (
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={onClearVisibilityFilter}
-						>
+						<Button variant="outline" size="sm" onClick={onClearVisibilityFilter}>
 							Ver todos
 						</Button>
 					)}
@@ -213,8 +206,7 @@ export function ProductsLayout({
 					className={cn(
 						'rounded-xl border border-primary/20 bg-surface-elevated p-3 shadow-lg',
 						'fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-30 lg:static lg:shadow-none',
-					)}
-				>
+					)}>
 					<p className="mb-3 text-sm font-medium text-foreground">
 						{selectedIds.size} seleccionado
 						{selectedIds.size !== 1 ? 's' : ''}
@@ -224,16 +216,14 @@ export function ProductsLayout({
 							variant="outline"
 							size="sm"
 							className="flex-1"
-							onClick={() => setSelectedIds(new Set())}
-						>
+							onClick={() => setSelectedIds(new Set())}>
 							Deseleccionar
 						</Button>
 						<Button
 							variant="destructive"
 							size="sm"
 							className="flex-1"
-							onClick={() => setBulkDeleteOpen(true)}
-						>
+							onClick={() => setBulkDeleteOpen(true)}>
 							<Trash2 className="h-4 w-4" />
 							Eliminar
 						</Button>
@@ -268,16 +258,14 @@ export function ProductsLayout({
 				size="icon"
 				className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] right-3 z-30 h-14 w-14 rounded-full shadow-lg lg:hidden"
 				onClick={() => setEditor({ mode: 'create' })}
-				aria-label="Nuevo producto"
-			>
+				aria-label="Nuevo producto">
 				<Plus className="h-6 w-6" />
 			</Button>
 
 			<Dialog
 				open={actionsOpen}
 				onClose={() => setActionsOpen(false)}
-				title="Importar / exportar"
-			>
+				title="Importar / exportar">
 				<div className="flex flex-col gap-2">
 					<Button
 						variant="outline"
@@ -285,8 +273,7 @@ export function ProductsLayout({
 						onClick={() => {
 							setActionsOpen(false);
 							setImportOpen(true);
-						}}
-					>
+						}}>
 						<Upload className="h-4 w-4" />
 						Importar Excel
 					</Button>
@@ -297,8 +284,7 @@ export function ProductsLayout({
 							onExportExcel();
 							onNotify('Carta exportada a Excel');
 							setActionsOpen(false);
-						}}
-					>
+						}}>
 						<Download className="h-4 w-4" />
 						Exportar Excel
 					</Button>
@@ -309,8 +295,7 @@ export function ProductsLayout({
 							onExportCsv();
 							onNotify('Carta exportada a CSV');
 							setActionsOpen(false);
-						}}
-					>
+						}}>
 						Exportar CSV
 					</Button>
 				</div>
@@ -319,10 +304,7 @@ export function ProductsLayout({
 			<Dialog
 				open={editor !== null && editorDraft !== null}
 				onClose={() => setEditor(null)}
-				title={
-					editor?.mode === 'create' ? 'Nuevo producto' : 'Editar producto'
-				}
-			>
+				title={editor?.mode === 'create' ? 'Nuevo producto' : 'Editar producto'}>
 				{editorDraft && (
 					<ProductEditLayout
 						key={
@@ -333,9 +315,7 @@ export function ProductsLayout({
 						initialDraft={editorDraft}
 						categories={categories}
 						images={images}
-						submitLabel={
-							editor?.mode === 'create' ? 'Crear producto' : 'Guardar'
-						}
+						submitLabel={editor?.mode === 'create' ? 'Crear producto' : 'Guardar'}
 						onSave={handleSave}
 						onCancel={() => setEditor(null)}
 						onDuplicate={

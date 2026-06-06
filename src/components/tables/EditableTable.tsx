@@ -72,8 +72,7 @@ export function EditableTable<T extends { id: string }>({
 			className={cn(
 				'overflow-x-auto rounded-xl border border-separator bg-surface-elevated',
 				className,
-			)}
-		>
+			)}>
 			<table className="w-full table-fixed border-collapse text-sm">
 				<colgroup>
 					{columns.map((col) => (
@@ -87,8 +86,7 @@ export function EditableTable<T extends { id: string }>({
 							<th
 								key={col.key}
 								className="px-4 py-3 text-left font-medium text-foreground-muted"
-								style={col.width ? { width: col.width } : undefined}
-							>
+								style={col.width ? { width: col.width } : undefined}>
 								{col.label}
 							</th>
 						))}
@@ -104,8 +102,7 @@ export function EditableTable<T extends { id: string }>({
 						<tr>
 							<td
 								colSpan={columns.length + (rowActions ? 1 : 0)}
-								className="px-4 py-12 text-center text-foreground-muted"
-							>
+								className="px-4 py-12 text-center text-foreground-muted">
 								{emptyMessage}
 							</td>
 						</tr>
@@ -113,12 +110,9 @@ export function EditableTable<T extends { id: string }>({
 						data.map((row) => (
 							<tr
 								key={row.id}
-								className="border-b border-separator last:border-0 hover:bg-fill/50"
-							>
+								className="border-b border-separator last:border-0 hover:bg-fill/50">
 								{columns.map((col) => {
-									const isEditing =
-										editing?.id === row.id &&
-										editing?.key === col.key;
+									const isEditing = editing?.id === row.id && editing?.key === col.key;
 									const value = row[col.key];
 									const editable = col.editable !== false;
 
@@ -128,34 +122,19 @@ export function EditableTable<T extends { id: string }>({
 											className="truncate px-4 py-2"
 											onDoubleClick={() => {
 												if (editable) startEdit(row.id, col.key);
-											}}
-										>
+											}}>
 											{isEditing && col.renderEdit ? (
-												<div
-													onKeyDown={(e) =>
-														handleKeyDown(e, row.id, col.key)
-													}
-												>
-													{col.renderEdit(
-														value,
-														row,
-														(v) => onUpdate(row.id, col.key, v),
-													)}
+												<div onKeyDown={(e) => handleKeyDown(e, row.id, col.key)}>
+													{col.renderEdit(value, row, (v) => onUpdate(row.id, col.key, v))}
 												</div>
 											) : col.render ? (
 												col.render(value, row, isEditing)
 											) : (
 												<span
 													className={cn(
-														editable &&
-															'cursor-text rounded px-1 py-0.5 hover:bg-fill',
+														editable && 'cursor-text rounded px-1 py-0.5 hover:bg-fill',
 													)}
-													title={
-														editable
-															? 'Doble clic para editar'
-															: undefined
-													}
-												>
+													title={editable ? 'Doble clic para editar' : undefined}>
 													{String(value ?? '')}
 												</span>
 											)}
@@ -163,9 +142,7 @@ export function EditableTable<T extends { id: string }>({
 									);
 								})}
 								{rowActions && (
-									<td className="px-4 py-2 text-right">
-										{rowActions(row)}
-									</td>
+									<td className="px-4 py-2 text-right">{rowActions(row)}</td>
 								)}
 							</tr>
 						))

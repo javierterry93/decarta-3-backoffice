@@ -82,9 +82,7 @@ export function SettingsLayout({
 	return (
 		<MobilePageLayout>
 			<div className="hidden lg:block">
-				<h1 className="text-2xl font-bold text-foreground">
-					Configuración
-				</h1>
+				<h1 className="text-2xl font-bold text-foreground">Configuración</h1>
 				<p className="mt-1 text-sm text-foreground-muted">
 					Datos generales de tu negocio
 				</p>
@@ -94,9 +92,7 @@ export function SettingsLayout({
 				<Card>
 					<CardHeader>
 						<CardTitle>Datos del local</CardTitle>
-						<CardDescription>
-							Información que verán tus clientes
-						</CardDescription>
+						<CardDescription>Información que verán tus clientes</CardDescription>
 					</CardHeader>
 
 					<div className="space-y-4">
@@ -104,9 +100,7 @@ export function SettingsLayout({
 							<Label htmlFor="name">Nombre del local</Label>
 							<Input id="name" {...register('name')} />
 							{errors.name && (
-								<p className="text-xs text-accent-orange">
-									{errors.name.message}
-								</p>
+								<p className="text-xs text-accent-orange">{errors.name.message}</p>
 							)}
 						</div>
 
@@ -126,8 +120,7 @@ export function SettingsLayout({
 										onClick={() => {
 											onRemoveLogo();
 											onNotify('Logo eliminado');
-										}}
-									>
+										}}>
 										Quitar logo
 									</Button>
 								</div>
@@ -179,10 +172,7 @@ export function SettingsLayout({
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="facebook">Facebook</Label>
-							<Input
-								id="facebook"
-								{...register('socialFacebook')}
-							/>
+							<Input id="facebook" {...register('socialFacebook')} />
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="twitter">X / Twitter</Label>
@@ -191,7 +181,9 @@ export function SettingsLayout({
 					</div>
 				</Card>
 
-				<Button type="submit" className="sticky bottom-0 w-full lg:static lg:w-auto">
+				<Button
+					type="submit"
+					className="sticky bottom-0 w-full lg:static lg:w-auto">
 					Guardar cambios
 				</Button>
 			</form>

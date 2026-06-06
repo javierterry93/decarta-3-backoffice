@@ -1,56 +1,50 @@
-import { useMenuStore } from '../store/menuStore.ts';
+import { getMenuApiClient } from '../api/getMenuApiClient.ts';
 import type {
-	BusinessSettings,
-	Category,
-	MenuImage,
-	Product,
-} from '../types/index.ts';
+	BusinessSettingsUpdateInput,
+	CategoryUpdateInput,
+	ImageCreateInput,
+	ProductCreateInput,
+	ProductImportItem,
+	ProductUpdateInput,
+} from '../api/types.ts';
 
-const store = () => useMenuStore.getState();
+const client = () => getMenuApiClient();
 
 export const menuService = {
-	getProducts: (): Product[] => store().products,
-	getCategories: (): Category[] => store().categories,
-	getImages: (): MenuImage[] => store().images,
-	getSettings: (): BusinessSettings => store().settings,
-	getLastModified: (): string => store().lastModified,
+	getMenu: () => client().getMenu(),
 
-	addProduct: (partial?: Partial<Product>): string =>
-		store().addProduct(partial),
-	updateProduct: (id: string, data: Partial<Product>): void =>
-		store().updateProduct(id, data),
-	duplicateProduct: (id: string): string => store().duplicateProduct(id),
-	deleteProduct: (id: string): void => store().deleteProduct(id),
+	getProducts: async () => (await client().getMenu()).products,
+	getCategories: async () => (await client().getMenu()).categories,
+	getImages: async () => (await client().getMenu()).images,
+	getSettings: async () => (await client().getMenu()).settings,
+	getLastModified: async () => (await client().getMenu()).lastModified,
 
-	reorderProducts: (categoryId: string, orderedIds: string[]): void =>
-		store().reorderProducts(categoryId, orderedIds),
+	addProduct: async (partial?: ProductCreateInput) =>
+		(await client().createProduct(partial ?? {})).id,
+	updateProduct: (id: string, data: ProductUpdateInput) =>
+		client().updateProduct(id, data),
+	duplicateProduct: async (id: string) =>
+		(await client().duplicateProduct(id)).id,
+	deleteProduct: (id: string) => client().deleteProduct(id),
+	reorderProducts: (categoryId: string, orderedIds: string[]) =>
+		client().reorderProducts({ categoryId, orderedIds }),
 
-	addCategory: (name?: string): string => store().addCategory(name),
-	updateCategory: (id: string, data: Partial<Category>): void =>
-		store().updateCategory(id, data),
-	deleteCategory: (id: string): void => store().deleteCategory(id),
-	reorderCategories: (orderedIds: string[]): void =>
-		store().reorderCategories(orderedIds),
-	resolveCategoryId: (name: string): string => {
-		const categories = store().categories;
-		if (!name.trim()) return categories[0]?.id ?? '';
-		const existing = categories.find(
-			(c) => c.name.toLowerCase() === name.toLowerCase(),
-		);
-		if (existing) return existing.id;
-		return store().addCategory(name.trim());
-	},
+	addCategory: async (name = '') => (await client().createCategory({ name })).id,
+	updateCategory: (id: string, data: CategoryUpdateInput) =>
+		client().updateCategory(id, data),
+	deleteCategory: (id: string) => client().deleteCategory(id),
+	reorderCategories: (orderedIds: string[]) =>
+		client().reorderCategories({ orderedIds }),
+	resolveCategoryId: async (name: string) =>
+		(await client().resolveCategoryId({ name })).id,
 
-	addImage: (image: Omit<MenuImage, 'id' | 'createdAt'>): string =>
-		store().addImage(image),
-	getImageById: (id: string): MenuImage | undefined =>
-		store().images.find((i) => i.id === id),
-	deleteImage: (id: string): void => store().deleteImage(id),
+	addImage: async (image: ImageCreateInput) =>
+		(await client().createImage(image)).id,
+	getImageById: async (id: string) => client().getImage(id),
+	deleteImage: (id: string) => client().deleteImage(id),
 
-	updateSettings: (data: Partial<BusinessSettings>): void =>
-		store().updateSettings(data),
+	updateSettings: (data: BusinessSettingsUpdateInput) =>
+		client().updateSettings(data),
 
-	importProducts: (
-		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
-	): void => store().importProducts(items),
+	importProducts: (items: ProductImportItem[]) => client().importProducts(items),
 };

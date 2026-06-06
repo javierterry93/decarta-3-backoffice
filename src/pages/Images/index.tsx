@@ -1,25 +1,42 @@
 import { useCallback } from 'react';
-import { useMenuStore } from '../../store/menuStore.ts';
+import {
+	PageError,
+	PageLoading,
+} from '../../components/layout/PageLoading.tsx';
 import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import {
+	useMenu,
+	useMenuMutations,
+	useUploadImage,
+} from '../../hooks/useMenu.ts';
 import { ImagesLayout } from '../../layouts/ImagesLayout.tsx';
-import { uploadImage } from '../../services/imageService.ts';
-import { menuService } from '../../services/menuService.ts';
 
 export default function ImagesPage() {
-	const images = useMenuStore((s) => s.images);
-	const products = useMenuStore((s) => s.products);
+	const { data: menu, isLoading, error } = useMenu();
+	const mutations = useMenuMutations();
+	const uploadImageMutation = useUploadImage();
 	const showToast = useAutoSaveToast();
 
-	const handleUploadImage = useCallback((file: File) => uploadImage(file), []);
+	const handleUploadImage = useCallback(
+		(file: File) => uploadImageMutation.mutateAsync(file),
+		[uploadImageMutation],
+	);
 
-	const handleDeleteImage = useCallback((id: string) => {
-		menuService.deleteImage(id);
-	}, []);
+	const handleDeleteImage = useCallback(
+		async (id: string) => {
+			await mutations.deleteImage.mutateAsync(id);
+			showToast('Imagen eliminada');
+		},
+		[mutations.deleteImage, showToast],
+	);
+
+	if (isLoading) return <PageLoading />;
+	if (error || !menu) return <PageError />;
 
 	return (
 		<ImagesLayout
-			images={images}
-			products={products}
+			images={menu.images}
+			products={menu.products}
 			onUploadImage={handleUploadImage}
 			onDeleteImage={handleDeleteImage}
 			onNotify={showToast}

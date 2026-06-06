@@ -15,11 +15,7 @@ export function Switch({
 }: SwitchProps) {
 	return (
 		<label
-			className={cn(
-				'inline-flex cursor-pointer items-center gap-2',
-				className,
-			)}
-		>
+			className={cn('inline-flex cursor-pointer items-center gap-2', className)}>
 			<button
 				type="button"
 				role="switch"
@@ -28,8 +24,7 @@ export function Switch({
 				className={cn(
 					'relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
 					checked ? 'bg-success' : 'bg-border',
-				)}
-			>
+				)}>
 				<span
 					className={cn(
 						'pointer-events-none block h-5 w-5 rounded-full bg-surface-elevated shadow transition-transform',
@@ -37,9 +32,7 @@ export function Switch({
 					)}
 				/>
 			</button>
-			{label && (
-				<span className="text-sm text-foreground">{label}</span>
-			)}
+			{label && <span className="text-sm text-foreground">{label}</span>}
 		</label>
 	);
 }

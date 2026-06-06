@@ -70,16 +70,14 @@ function SortableCategoryCard({
 			className={cn(
 				'rounded-xl border border-separator bg-surface-elevated p-3',
 				isDragging && 'opacity-80 shadow-md',
-			)}
-		>
+			)}>
 			<div className="flex items-start gap-3">
 				<button
 					type="button"
 					className="mt-2 flex min-h-11 min-w-11 shrink-0 cursor-grab items-center justify-center rounded-lg text-foreground-muted active:cursor-grabbing active:bg-fill"
 					{...attributes}
 					{...listeners}
-					aria-label="Arrastrar para reordenar"
-				>
+					aria-label="Arrastrar para reordenar">
 					<GripVertical className="h-5 w-5" />
 				</button>
 				<div className="min-w-0 flex-1 space-y-3">
@@ -99,9 +97,7 @@ function SortableCategoryCard({
 						</span>
 						<Switch
 							checked={category.visible}
-							onCheckedChange={(visible) =>
-								onToggleVisible(category.id, visible)
-							}
+							onCheckedChange={(visible) => onToggleVisible(category.id, visible)}
 							label={category.visible ? 'Visible' : 'Oculta'}
 						/>
 					</div>
@@ -112,8 +108,7 @@ function SortableCategoryCard({
 					variant="ghost"
 					size="sm"
 					className="mt-3 w-full text-accent-orange lg:hidden"
-					onClick={() => onDelete(category.id)}
-				>
+					onClick={() => onDelete(category.id)}>
 					<Trash2 className="h-4 w-4" />
 					Eliminar categoría
 				</Button>
@@ -156,25 +151,21 @@ function SortableRow({
 			className={cn(
 				'border-b border-separator last:border-0',
 				isDragging && 'bg-fill opacity-80',
-			)}
-		>
+			)}>
 			<td className="px-2 py-2">
 				<button
 					type="button"
 					className="cursor-grab rounded p-1 text-foreground-muted hover:bg-fill active:cursor-grabbing"
 					{...attributes}
 					{...listeners}
-					aria-label="Arrastrar para reordenar"
-				>
+					aria-label="Arrastrar para reordenar">
 					<GripVertical className="h-4 w-4" />
 				</button>
 			</td>
 			<td className="px-4 py-2">
 				<Input
 					value={category.name}
-					onChange={(e) =>
-						onUpdate(category.id, { name: e.target.value })
-					}
+					onChange={(e) => onUpdate(category.id, { name: e.target.value })}
 					onBlur={() => {
 						onPersist(category.id);
 						onNotify('Categoría guardada');
@@ -190,9 +181,7 @@ function SortableRow({
 				<div className="flex justify-center">
 					<Switch
 						checked={category.visible}
-						onCheckedChange={(visible) =>
-							onToggleVisible(category.id, visible)
-						}
+						onCheckedChange={(visible) => onToggleVisible(category.id, visible)}
 						label={category.visible ? 'Visible' : 'Oculta'}
 					/>
 				</div>
@@ -243,8 +232,7 @@ export function CategorySorter({
 		<DndContext
 			sensors={sensors}
 			collisionDetection={closestCenter}
-			onDragEnd={handleDragEnd}
-		>
+			onDragEnd={handleDragEnd}>
 			<SortableContext items={ids} strategy={verticalListSortingStrategy}>
 				<div className="space-y-2 lg:hidden">
 					{sorted.map((category) => (

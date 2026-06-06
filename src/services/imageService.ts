@@ -1,8 +1,5 @@
-import { menuService } from './menuService.ts';
-import {
-	blobToDataUrl,
-	optimizeImage,
-} from '../utils/imageOptimizer.ts';
+import { getMenuApiClient } from '../api/getMenuApiClient.ts';
+import { blobToDataUrl, optimizeImage } from '../utils/imageOptimizer.ts';
 
 export async function uploadImage(file: File): Promise<string> {
 	const { blob, thumbnailBlob } = await optimizeImage(file);
@@ -10,9 +7,10 @@ export async function uploadImage(file: File): Promise<string> {
 		blobToDataUrl(blob),
 		blobToDataUrl(thumbnailBlob),
 	]);
-	return menuService.addImage({
+	const image = await getMenuApiClient().createImage({
 		name: file.name.replace(/\.[^.]+$/, ''),
 		url,
 		thumbnailUrl,
 	});
+	return image.id;
 }

@@ -1,35 +1,56 @@
 import { useCallback } from 'react';
-import { useMenuStore } from '../../store/menuStore.ts';
+import {
+	PageError,
+	PageLoading,
+} from '../../components/layout/PageLoading.tsx';
 import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import {
+	useMenu,
+	useMenuMutations,
+	useUploadImage,
+} from '../../hooks/useMenu.ts';
 import { SettingsLayout } from '../../layouts/SettingsLayout.tsx';
-import { uploadImage } from '../../services/imageService.ts';
-import { menuService } from '../../services/menuService.ts';
 
 export default function SettingsPage() {
-	const settings = useMenuStore((s) => s.settings);
+	const { data: menu, isLoading, error } = useMenu();
+	const mutations = useMenuMutations();
+	const uploadImageMutation = useUploadImage();
 	const showToast = useAutoSaveToast();
 
 	const handleSaveSettings = useCallback(
-		(data: Parameters<typeof menuService.updateSettings>[0]) => {
-			menuService.updateSettings(data);
+		async (data: Parameters<typeof mutations.updateSettings.mutateAsync>[0]) => {
+			await mutations.updateSettings.mutateAsync(data);
+			showToast('Configuración guardada');
 		},
-		[],
+		[mutations.updateSettings, showToast],
 	);
 
-	const handleUploadImage = useCallback((file: File) => uploadImage(file), []);
+	const handleUploadImage = useCallback(
+		(file: File) => uploadImageMutation.mutateAsync(file),
+		[uploadImageMutation],
+	);
 
-	const handleSetLogo = useCallback((imageId: string) => {
-		const img = menuService.getImageById(imageId);
-		if (img) menuService.updateSettings({ logoUrl: img.url });
-	}, []);
+	const handleSetLogo = useCallback(
+		async (imageId: string) => {
+			const img = menu?.images.find((i) => i.id === imageId);
+			if (!img) return;
+			await mutations.updateSettings.mutateAsync({ logoUrl: img.url });
+			showToast('Logo actualizado');
+		},
+		[menu?.images, mutations.updateSettings, showToast],
+	);
 
-	const handleRemoveLogo = useCallback(() => {
-		menuService.updateSettings({ logoUrl: null });
-	}, []);
+	const handleRemoveLogo = useCallback(async () => {
+		await mutations.updateSettings.mutateAsync({ logoUrl: null });
+		showToast('Logo eliminado');
+	}, [mutations.updateSettings, showToast]);
+
+	if (isLoading) return <PageLoading />;
+	if (error || !menu) return <PageError />;
 
 	return (
 		<SettingsLayout
-			settings={settings}
+			settings={menu.settings}
 			onSaveSettings={handleSaveSettings}
 			onUploadImage={handleUploadImage}
 			onSetLogo={handleSetLogo}

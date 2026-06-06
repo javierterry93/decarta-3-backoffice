@@ -44,8 +44,7 @@ function Sidebar() {
 									? 'bg-primary text-on-primary'
 									: 'text-foreground-muted hover:bg-fill hover:text-foreground',
 							)
-						}
-					>
+						}>
 						<Icon className="h-5 w-5 shrink-0" aria-hidden />
 						{label}
 					</NavLink>
@@ -87,16 +86,14 @@ function MobileNavDrawer({
 					'pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]',
 					visible ? 'translate-x-0' : '-translate-x-full',
 				)}
-				style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}
-			>
+				style={{ transitionDuration: `${DRAWER_DURATION_MS}ms` }}>
 				<div className="flex h-site-header shrink-0 items-center justify-between border-b border-separator px-3">
 					<span className="text-lg font-semibold text-foreground">Mi Carta</span>
 					<Button
 						variant="ghost"
 						size="icon"
 						onClick={onClose}
-						aria-label="Cerrar menú"
-					>
+						aria-label="Cerrar menú">
 						<X className="h-5 w-5" aria-hidden />
 					</Button>
 				</div>
@@ -115,8 +112,7 @@ function MobileNavDrawer({
 												? 'bg-primary text-on-primary'
 												: 'text-foreground hover:bg-fill',
 										)
-									}
-								>
+									}>
 									<Icon className="h-5 w-5 shrink-0" aria-hidden />
 									{label}
 								</NavLink>
@@ -150,8 +146,7 @@ function MobileHeader({
 					onClick={onToggleMenu}
 					aria-expanded={menuOpen}
 					aria-controls="mobile-nav-menu"
-					aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
-				>
+					aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}>
 					<Menu className="h-5 w-5" aria-hidden />
 				</Button>
 				<h1 className="min-w-0 flex-1 truncate text-base font-semibold text-foreground">
