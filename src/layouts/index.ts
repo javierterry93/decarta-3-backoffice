@@ -1,6 +1,5 @@
 export { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 export { DashboardLayout } from './DashboardLayout.tsx';
-export { PreviewLayout } from './PreviewLayout.tsx';
 export { CategoriesLayout } from './CategoriesLayout.tsx';
 export { ImagesLayout } from './ImagesLayout.tsx';
 export { SettingsLayout } from './SettingsLayout.tsx';

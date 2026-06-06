@@ -37,8 +37,6 @@ export type BusinessSettings = {
 	socialTwitter: string;
 };
 
-export type PreviewDevice = 'mobile' | 'tablet' | 'desktop';
-
 export type ExcelColumnMapping = {
 	excelColumn: string;
 	systemField: 'name' | 'price' | 'category' | 'description' | 'skip';

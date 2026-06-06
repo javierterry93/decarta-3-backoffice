@@ -1,6 +1,5 @@
 import {
 	ClipboardList,
-	Eye,
 	FolderOpen,
 	Image,
 	LayoutDashboard,
@@ -20,7 +19,6 @@ export const primaryNavItems = [
 ] as const;
 
 export const secondaryNavItems = [
-	{ to: '/vista-previa', label: 'Vista previa', icon: Eye, end: false as const },
 	{
 		to: '/configuracion',
 		label: 'Configuración',
@@ -36,6 +34,15 @@ export const pageTitles: Record<string, string> = {
 	'/carta': 'Carta',
 	'/categorias': 'Categorías',
 	'/imagenes': 'Imágenes',
-	'/vista-previa': 'Vista previa',
 	'/configuracion': 'Configuración',
 };
+
+export function getPageTitle(pathname: string, search: string): string {
+	if (
+		pathname === '/carta' &&
+		new URLSearchParams(search).get('filtro') === 'ocultos'
+	) {
+		return 'Productos ocultos';
+	}
+	return pageTitles[pathname] ?? 'Mi Carta';
+}

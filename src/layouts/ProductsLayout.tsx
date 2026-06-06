@@ -22,10 +22,14 @@ type ExcelPreviewRow = Record<string, string | number>;
 
 type ProductEditor = { mode: 'create' } | { mode: 'edit'; id: string };
 
+type ProductVisibilityFilter = 'all' | 'hidden';
+
 type ProductsLayoutProps = {
 	products: Product[];
 	categories: Category[];
 	images: MenuImage[];
+	visibilityFilter?: ProductVisibilityFilter;
+	onClearVisibilityFilter?: () => void;
 	onAddProduct: (data: ProductEditDraft) => void;
 	onUpdateProduct: (id: string, data: Partial<Product>) => void;
 	onDuplicateProduct: (id: string) => void;
@@ -55,6 +59,8 @@ export function ProductsLayout({
 	products,
 	categories,
 	images,
+	visibilityFilter = 'all',
+	onClearVisibilityFilter,
 	onAddProduct,
 	onUpdateProduct,
 	onDuplicateProduct,
@@ -76,6 +82,13 @@ export function ProductsLayout({
 	const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 	const [importOpen, setImportOpen] = useState(false);
 	const [actionsOpen, setActionsOpen] = useState(false);
+	const isHiddenFilter = visibilityFilter === 'hidden';
+
+	const filteredProducts = useMemo(
+		() =>
+			isHiddenFilter ? products.filter((product) => !product.visible) : products,
+		[products, isHiddenFilter],
+	);
 
 	const editingProduct = useMemo(() => {
 		if (editor?.mode !== 'edit') return null;
@@ -121,13 +134,19 @@ export function ProductsLayout({
 		<MobilePageLayout>
 			<div className="space-y-3 lg:flex lg:items-start lg:justify-between lg:gap-4">
 				<div className="hidden lg:block">
-					<h1 className="text-2xl font-bold text-foreground">Carta</h1>
+					<h1 className="text-2xl font-bold text-foreground">
+						{isHiddenFilter ? 'Productos ocultos' : 'Carta'}
+					</h1>
 					<p className="mt-1 text-sm text-foreground-muted">
-						Productos por categoría · Arrastra para ordenar
+						{isHiddenFilter
+							? 'Productos no visibles en la carta'
+							: 'Productos por categoría · Arrastra para ordenar'}
 					</p>
 				</div>
 				<p className="text-sm text-foreground-muted lg:hidden">
-					Toca un producto para editarlo · Mantén pulsado ≡ para ordenar
+					{isHiddenFilter
+						? 'Productos no visibles en la carta'
+						: 'Toca un producto para editarlo · Mantén pulsado ≡ para ordenar'}
 				</p>
 
 				<div className="hidden flex-wrap justify-end gap-2 lg:flex">
@@ -172,6 +191,23 @@ export function ProductsLayout({
 				</Button>
 			</div>
 
+			{isHiddenFilter && (
+				<div className="flex items-center justify-between gap-3 rounded-xl border border-accent-orange/20 bg-accent-orange/5 px-4 py-3">
+					<p className="text-sm font-medium text-foreground">
+						Filtro: productos ocultos
+					</p>
+					{onClearVisibilityFilter && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={onClearVisibilityFilter}
+						>
+							Ver todos
+						</Button>
+					)}
+				</div>
+			)}
+
 			{selectedIds.size > 0 && (
 				<div
 					className={cn(
@@ -205,20 +241,28 @@ export function ProductsLayout({
 				</div>
 			)}
 
-			<ProductCategoryList
-				products={products}
-				categories={categories}
-				images={images}
-				selectedIds={selectedIds}
-				onSelectionChange={setSelectedIds}
-				onReorder={handleReorder}
-				onEdit={(id) => setEditor({ mode: 'edit', id })}
-				onDuplicate={(id) => {
-					onDuplicateProduct(id);
-					onNotify('Producto duplicado');
-				}}
-				onDelete={setDeleteId}
-			/>
+			{filteredProducts.length === 0 ? (
+				<p className="rounded-xl border border-dashed border-border py-12 text-center text-foreground-muted">
+					{isHiddenFilter
+						? 'No hay productos ocultos.'
+						: 'Aún no hay productos. Pulsa «Nuevo producto» para empezar.'}
+				</p>
+			) : (
+				<ProductCategoryList
+					products={filteredProducts}
+					categories={categories}
+					images={images}
+					selectedIds={selectedIds}
+					onSelectionChange={setSelectedIds}
+					onReorder={handleReorder}
+					onEdit={(id) => setEditor({ mode: 'edit', id })}
+					onDuplicate={(id) => {
+						onDuplicateProduct(id);
+						onNotify('Producto duplicado');
+					}}
+					onDelete={setDeleteId}
+				/>
+			)}
 
 			<Button
 				size="icon"

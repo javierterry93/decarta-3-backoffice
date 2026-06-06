@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '../../utils/cn.ts';
 import { Button } from '../ui/Button.tsx';
-import { navItems, pageTitles } from './navItems.ts';
+import { navItems, getPageTitle } from './navItems.ts';
 
 const DRAWER_DURATION_MS = 200;
 
@@ -138,8 +138,8 @@ function MobileHeader({
 	onToggleMenu: () => void;
 	onCloseMenu: () => void;
 }) {
-	const { pathname } = useLocation();
-	const title = pageTitles[pathname] ?? 'Mi Carta';
+	const { pathname, search } = useLocation();
+	const title = getPageTitle(pathname, search);
 
 	return (
 		<>
