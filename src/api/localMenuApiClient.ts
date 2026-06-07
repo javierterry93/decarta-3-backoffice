@@ -1,4 +1,14 @@
+import {
+	findCategoryByName,
+	formatCategoryName,
+} from '../utils/categoryImport.ts';
+import {
+	clearAllLocalImageStorage,
+	persistImageBlobs,
+	removeImageBlobs,
+} from '../services/imageStorage/imageResolver.ts';
 import { useMenuStore } from '../store/menuStore.ts';
+import { generateId } from '../utils/format.ts';
 import type { MenuApiClient } from './menuApiClient.ts';
 
 const store = () => useMenuStore.getState();
@@ -60,12 +70,11 @@ export const localMenuApiClient: MenuApiClient = {
 	},
 	resolveCategoryId: async ({ name = '' }) => {
 		const categories = store().categories;
-		if (!name.trim()) return { id: categories[0]?.id ?? '' };
-		const existing = categories.find(
-			(c) => c.name.toLowerCase() === name.toLowerCase(),
-		);
+		const formatted = formatCategoryName(name);
+		if (!formatted) return { id: categories[0]?.id ?? '' };
+		const existing = findCategoryByName(categories, formatted);
 		if (existing) return { id: existing.id };
-		return { id: store().addCategory(name.trim()) };
+		return { id: store().addCategory(formatted) };
 	},
 
 	listImages: async () => store().images,
@@ -75,10 +84,20 @@ export const localMenuApiClient: MenuApiClient = {
 		return image;
 	},
 	createImage: async (input) => {
-		const id = store().addImage(input);
-		return store().images.find((i) => i.id === id)!;
+		const id = generateId();
+		if (input.fullBlob && input.thumbBlob) {
+			await persistImageBlobs(id, input.fullBlob, input.thumbBlob);
+		}
+		store().addImage({ id, name: input.name });
+		const created = store().images.find((i) => i.id === id)!;
+		return {
+			...created,
+			url: input.url,
+			thumbnailUrl: input.thumbnailUrl,
+		};
 	},
 	deleteImage: async (id) => {
+		await removeImageBlobs(id);
 		store().deleteImage(id);
 	},
 
@@ -86,5 +105,10 @@ export const localMenuApiClient: MenuApiClient = {
 	updateSettings: async (input) => {
 		store().updateSettings(input);
 		return store().settings;
+	},
+
+	resetMenu: async () => {
+		await clearAllLocalImageStorage();
+		store().resetMenu();
 	},
 };

@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
-import type { ExcelColumnMapping, Product } from '../types/index.ts';
+import type { Category, ExcelColumnMapping, Product } from '../types/index.ts';
+import { createCategoryImportResolver } from '../utils/categoryImport.ts';
 
 export type ExcelPreviewRow = Record<string, string | number>;
 
@@ -58,11 +59,12 @@ export function guessColumnMappings(columns: string[]): ExcelColumnMapping[] {
 export function mapRowsToProducts(
 	rows: ExcelPreviewRow[],
 	mappings: ExcelColumnMapping[],
-	resolveCategoryId: (name: string) => string,
+	categories: Category[],
 ): Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[] {
 	const fieldMap = Object.fromEntries(
 		mappings.map((m) => [m.systemField, m.excelColumn]),
 	);
+	const resolveCategoryId = createCategoryImportResolver(categories);
 
 	return rows
 		.filter((row) => {

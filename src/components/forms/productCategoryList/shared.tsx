@@ -14,6 +14,7 @@ export type CategoryProductTableProps = {
 	onEdit: (productId: string) => void;
 	onDuplicate: (productId: string) => void;
 	onDelete: (productId: string) => void;
+	reorderEnabled?: boolean;
 };
 
 export type ProductRowCallbacks = {

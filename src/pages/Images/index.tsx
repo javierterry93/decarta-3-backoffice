@@ -7,19 +7,21 @@ import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
 import {
 	useMenu,
 	useMenuMutations,
-	useUploadImage,
+	useUploadImages,
 } from '../../hooks/useMenu.ts';
 import { ImagesLayout } from '../../layouts/ImagesLayout.tsx';
 
 export default function ImagesPage() {
 	const { data: menu, isLoading, error } = useMenu();
 	const mutations = useMenuMutations();
-	const uploadImageMutation = useUploadImage();
+	const uploadImagesMutation = useUploadImages();
 	const showToast = useAutoSaveToast();
 
-	const handleUploadImage = useCallback(
-		(file: File) => uploadImageMutation.mutateAsync(file),
-		[uploadImageMutation],
+	const handleUploadImages = useCallback(
+		async (files: File[]) => {
+			await uploadImagesMutation.mutateAsync(files);
+		},
+		[uploadImagesMutation],
 	);
 
 	const handleDeleteImage = useCallback(
@@ -37,7 +39,7 @@ export default function ImagesPage() {
 		<ImagesLayout
 			images={menu.images}
 			products={menu.products}
-			onUploadImage={handleUploadImage}
+			onUploadImages={handleUploadImages}
 			onDeleteImage={handleDeleteImage}
 			onNotify={showToast}
 		/>

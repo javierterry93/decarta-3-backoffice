@@ -28,10 +28,12 @@ import {
 const MOBILE_PRICE_COL = 'w-[4.5rem]';
 const MOBILE_STATUS_COL = 'w-[3.75rem]';
 
-function useMobileSortableSensors() {
+function useMobileSortableSensors(reorderEnabled = true) {
 	return useSensors(
 		useSensor(TouchSensor, {
-			activationConstraint: { delay: 200, tolerance: 8 },
+			activationConstraint: reorderEnabled
+				? { delay: 200, tolerance: 8 }
+				: { delay: 999999, tolerance: 999999 },
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
@@ -127,6 +129,7 @@ export function MobileCategoryProductTable({
 	onSelectionChange,
 	onReorder,
 	onEdit,
+	reorderEnabled = true,
 }: Pick<
 	CategoryProductTableProps,
 	| 'category'
@@ -135,11 +138,12 @@ export function MobileCategoryProductTable({
 	| 'onSelectionChange'
 	| 'onReorder'
 	| 'onEdit'
+	| 'reorderEnabled'
 >) {
 	const ids = products.map((p) => p.id);
 	const { allSelected, someSelected, toggleAll, toggleOne } =
 		useCategorySelection(products, selectedIds, onSelectionChange);
-	const sensors = useMobileSortableSensors();
+	const sensors = useMobileSortableSensors(reorderEnabled);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;

@@ -1,9 +1,4 @@
-export function formatPrice(value: number): string {
-	return new Intl.NumberFormat('es-ES', {
-		style: 'currency',
-		currency: 'EUR',
-	}).format(value);
-}
+export { formatEuroPrice as formatPrice } from './currency.ts';
 
 export function formatDate(date: string): string {
 	return new Intl.DateTimeFormat('es-ES', {

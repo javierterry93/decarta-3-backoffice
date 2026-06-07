@@ -47,4 +47,5 @@ export interface MenuApiClient {
 
 	getSettings(): Promise<BusinessSettings>;
 	updateSettings(input: BusinessSettingsUpdateInput): Promise<BusinessSettings>;
+	resetMenu(): Promise<void>;
 }

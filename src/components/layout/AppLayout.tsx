@@ -192,8 +192,8 @@ export function AppLayout({ children }: AppLayoutProps) {
 					onToggleMenu={() => setMenuOpen((open) => !open)}
 					onCloseMenu={() => setMenuOpen(false)}
 				/>
-				<main className="flex-1 overflow-x-hidden overflow-y-auto px-3 py-4 lg:p-6">
-					{children}
+				<main className="flex-1 overflow-x-hidden overflow-y-auto py-4 max-lg:px-3 lg:py-6">
+					<div className="lg:container">{children}</div>
 				</main>
 			</div>
 		</div>

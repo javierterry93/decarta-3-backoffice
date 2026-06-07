@@ -5,6 +5,7 @@ import {
 } from '../../components/layout/PageLoading.tsx';
 import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
 import { useMenu, useMenuMutations } from '../../hooks/useMenu.ts';
+import type { CategoryEditDraft } from '../../layouts/CategoryEditLayout.tsx';
 import { CategoriesLayout } from '../../layouts/CategoriesLayout.tsx';
 
 export default function CategoriesPage() {
@@ -12,33 +13,43 @@ export default function CategoriesPage() {
 	const mutations = useMenuMutations();
 	const showToast = useAutoSaveToast();
 
-	const handleAddCategory = useCallback(async () => {
-		await mutations.createCategory.mutateAsync({ name: '' });
-		showToast('Categoría creada');
-	}, [mutations.createCategory, showToast]);
+	const handleAddCategory = useCallback(
+		async (data: CategoryEditDraft) => {
+			const { id } = await mutations.createCategory.mutateAsync({
+				name: data.name,
+			});
+			if (!data.visible) {
+				await mutations.updateCategory.mutateAsync({
+					id,
+					input: { visible: false },
+				});
+			}
+			showToast('Categoría creada');
+		},
+		[mutations.createCategory, mutations.updateCategory, showToast],
+	);
 
 	const handleUpdateCategory = useCallback(
-		async (id: string, data: { name?: string; visible?: boolean }) => {
-			await mutations.updateCategory.mutateAsync({ id, input: data });
+		async (id: string, data: CategoryEditDraft) => {
+			await mutations.updateCategory.mutateAsync({
+				id,
+				input: { name: data.name, visible: data.visible },
+			});
 			showToast('Categoría guardada');
 		},
 		[mutations.updateCategory, showToast],
 	);
 
 	const handleDeleteCategory = useCallback(
-		async (id: string) => {
-			await mutations.deleteCategory.mutateAsync(id);
-			showToast('Categoría eliminada');
-		},
-		[mutations.deleteCategory, showToast],
+		(id: string) => mutations.deleteCategory.mutate(id),
+		[mutations.deleteCategory],
 	);
 
 	const handleReorderCategories = useCallback(
-		async (orderedIds: string[]) => {
-			await mutations.reorderCategories.mutateAsync({ orderedIds });
-			showToast('Orden actualizado');
+		(orderedIds: string[]) => {
+			mutations.reorderCategories.mutate({ orderedIds });
 		},
-		[mutations.reorderCategories, showToast],
+		[mutations.reorderCategories],
 	);
 
 	if (isLoading) return <PageLoading />;
@@ -47,6 +58,7 @@ export default function CategoriesPage() {
 	return (
 		<CategoriesLayout
 			categories={menu.categories}
+			products={menu.products}
 			onAddCategory={handleAddCategory}
 			onUpdateCategory={handleUpdateCategory}
 			onDeleteCategory={handleDeleteCategory}

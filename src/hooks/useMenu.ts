@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMenuApiClient } from '../api/getMenuApiClient.ts';
 import { menuQueryKey } from '../api/menuQueryKey.ts';
-import { uploadImage } from '../services/imageService.ts';
+import { uploadImage, uploadImages } from '../services/imageService.ts';
 import type {
 	BusinessSettingsUpdateInput,
 	CategoryCreateInput,
@@ -89,6 +89,10 @@ export function useMenuMutations() {
 				client.updateSettings(input),
 			onSuccess: invalidate,
 		}),
+		resetMenu: useMutation({
+			mutationFn: () => client.resetMenu(),
+			onSuccess: invalidate,
+		}),
 	};
 }
 
@@ -97,6 +101,15 @@ export function useUploadImage() {
 
 	return useMutation({
 		mutationFn: (file: File) => uploadImage(file),
+		onSuccess: () => queryClient.invalidateQueries({ queryKey: menuQueryKey }),
+	});
+}
+
+export function useUploadImages() {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		mutationFn: (files: File[]) => uploadImages(files),
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: menuQueryKey }),
 	});
 }

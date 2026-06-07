@@ -26,10 +26,10 @@ import {
 	useCategorySelection,
 } from './shared.tsx';
 
-function useDesktopSortableSensors() {
+function useDesktopSortableSensors(reorderEnabled = true) {
 	return useSensors(
 		useSensor(PointerSensor, {
-			activationConstraint: { distance: 8 },
+			activationConstraint: { distance: reorderEnabled ? 8 : 999999 },
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
@@ -142,11 +142,12 @@ export function DesktopCategoryProductTable({
 	onEdit,
 	onDuplicate,
 	onDelete,
+	reorderEnabled = true,
 }: CategoryProductTableProps) {
 	const ids = products.map((p) => p.id);
 	const { allSelected, someSelected, toggleAll, toggleOne } =
 		useCategorySelection(products, selectedIds, onSelectionChange);
-	const sensors = useDesktopSortableSensors();
+	const sensors = useDesktopSortableSensors(reorderEnabled);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;

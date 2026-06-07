@@ -39,6 +39,19 @@ paths:
        schema:
         $ref: '#/components/schemas/MenuSnapshot'
 
+  delete:
+   tags: [Menu]
+   summary: Borrar toda la carta
+   description: |
+    Elimina productos, categorías, imágenes y restaura la configuración del
+    negocio a los valores por defecto. Acción irreversible.
+   operationId: resetMenu
+   responses:
+    '204':
+     description: Carta borrada
+    '400':
+     $ref: '#/components/responses/BadRequest'
+
  /products:
   get:
    tags: [Products]
@@ -234,7 +247,8 @@ paths:
    summary: Resolver ID de categoría por nombre (crear si no existe)
    description: |
     Usado en importación Excel. Si `name` está vacío, devuelve la primera
-    categoría. Si existe (case-insensitive), devuelve su ID. Si no, crea una nueva.
+    categoría. Si existe (comparación normalizada del nombre), devuelve su ID.
+    Si no, crea una nueva.
    operationId: resolveCategoryId
    requestBody:
     required: true
@@ -681,8 +695,6 @@ components:
    required:
     - id
     - name
-    - url
-    - thumbnailUrl
     - createdAt
    properties:
     id:
@@ -691,10 +703,10 @@ components:
      type: string
     url:
      type: string
-     description: URL pública o data URL de la imagen completa
+     description: URL pública (solo en modo remoto)
     thumbnailUrl:
      type: string
-     description: URL pública o data URL del thumbnail
+     description: URL del thumbnail (solo en modo remoto)
     createdAt:
      type: string
      format: date-time
@@ -703,21 +715,21 @@ components:
    type: object
    required:
     - name
-    - url
-    - thumbnailUrl
    properties:
     name:
      type: string
     url:
      type: string
+     description: Imagen completa (modo remoto)
     thumbnailUrl:
      type: string
+     description: Thumbnail (modo remoto)
 
   BusinessSettings:
    type: object
    required:
     - name
-    - logoUrl
+    - logoImageId
     - phone
     - address
     - hours
@@ -727,9 +739,10 @@ components:
    properties:
     name:
      type: string
-    logoUrl:
+    logoImageId:
      type: string
      nullable: true
+     description: ID de imagen en la biblioteca
     phone:
      type: string
     address:
@@ -748,7 +761,7 @@ components:
    properties:
     name:
      type: string
-    logoUrl:
+    logoImageId:
      type: string
      nullable: true
     phone:

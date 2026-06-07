@@ -1,11 +1,18 @@
 import { Copy, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../components/ui/Button.tsx';
+import { EuroPriceInput } from '../components/forms/EuroPriceInput.tsx';
 import { Input } from '../components/ui/Input.tsx';
 import { Label } from '../components/ui/Label.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { Switch } from '../components/ui/Switch.tsx';
+import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
 import type { Category, MenuImage } from '../types/index.ts';
+import {
+	isProductDraftValid,
+	isProductNameValid,
+	isProductPriceValid,
+} from '../utils/productValidation.ts';
 
 export type ProductEditDraft = {
 	name: string;
@@ -39,6 +46,16 @@ export function ProductEditLayout({
 }: ProductEditLayoutProps) {
 	const [draft, setDraft] = useState<ProductEditDraft>(initialDraft);
 
+	useEffect(() => {
+		setDraft(initialDraft);
+	}, [initialDraft]);
+
+	const previewUrl = useImageObjectUrl(
+		draft.imageId,
+		'thumb',
+		images.find((i) => i.id === draft.imageId),
+	);
+
 	const categoryOptions = categories.map((c) => ({
 		value: c.id,
 		label: c.name || 'Sin nombre',
@@ -52,7 +69,13 @@ export function ProductEditLayout({
 	const patch = (data: Partial<ProductEditDraft>) =>
 		setDraft((prev) => ({ ...prev, ...data }));
 
-	const canSave = draft.categoryId.length > 0;
+	const nameError = !isProductNameValid(draft.name)
+		? 'El nombre es obligatorio'
+		: null;
+	const priceError = !isProductPriceValid(draft.price)
+		? 'El precio es obligatorio'
+		: null;
+	const canSave = isProductDraftValid(draft);
 
 	return (
 		<form
@@ -70,7 +93,9 @@ export function ProductEditLayout({
 						value={draft.name}
 						onChange={(e) => patch({ name: e.target.value })}
 						placeholder="Nombre del producto"
+						required
 					/>
+					{nameError && <p className="text-xs text-accent-orange">{nameError}</p>}
 				</div>
 
 				<div className="space-y-2">
@@ -90,15 +115,13 @@ export function ProductEditLayout({
 
 				<div className="space-y-2">
 					<Label htmlFor="product-price">Precio</Label>
-					<Input
+					<EuroPriceInput
 						id="product-price"
-						type="number"
-						step="0.01"
-						min="0"
-						inputMode="decimal"
-						value={String(draft.price)}
-						onChange={(e) => patch({ price: parseFloat(e.target.value) || 0 })}
+						value={draft.price}
+						onChange={(price) => patch({ price })}
+						required
 					/>
+					{priceError && <p className="text-xs text-accent-orange">{priceError}</p>}
 				</div>
 
 				<div className="space-y-2">
@@ -118,9 +141,9 @@ export function ProductEditLayout({
 						onChange={(v) => patch({ imageId: v || null })}
 						options={imageOptions}
 					/>
-					{draft.imageId && (
+					{draft.imageId && previewUrl && (
 						<img
-							src={images.find((i) => i.id === draft.imageId)?.thumbnailUrl}
+							src={previewUrl}
 							alt=""
 							className="mt-2 h-16 w-16 rounded object-cover"
 						/>

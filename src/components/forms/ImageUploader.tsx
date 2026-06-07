@@ -3,25 +3,28 @@ import { useCallback, useState } from 'react';
 import { cn } from '../../utils/cn.ts';
 
 type ImageUploaderProps = {
-	onUpload: (file: File) => Promise<void>;
+	onUpload: (files: File[]) => Promise<void>;
 	className?: string;
 	compact?: boolean;
+	multiple?: boolean;
 };
 
 export function ImageUploader({
 	onUpload,
 	className,
 	compact = false,
+	multiple = true,
 }: ImageUploaderProps) {
 	const [dragging, setDragging] = useState(false);
 	const [uploading, setUploading] = useState(false);
 
-	const processFile = useCallback(
-		async (file: File) => {
-			if (!file.type.startsWith('image/')) return;
+	const processFiles = useCallback(
+		async (fileList: FileList | File[]) => {
+			const files = [...fileList].filter((file) => file.type.startsWith('image/'));
+			if (files.length === 0) return;
 			setUploading(true);
 			try {
-				await onUpload(file);
+				await onUpload(files);
 			} finally {
 				setUploading(false);
 			}
@@ -33,19 +36,17 @@ export function ImageUploader({
 		(e: React.DragEvent) => {
 			e.preventDefault();
 			setDragging(false);
-			const file = e.dataTransfer.files[0];
-			if (file) void processFile(file);
+			void processFiles(e.dataTransfer.files);
 		},
-		[processFile],
+		[processFiles],
 	);
 
 	const handleChange = useCallback(
 		(e: React.ChangeEvent<HTMLInputElement>) => {
-			const file = e.target.files?.[0];
-			if (file) void processFile(file);
+			if (e.target.files) void processFiles(e.target.files);
 			e.target.value = '';
 		},
-		[processFile],
+		[processFiles],
 	);
 
 	return (
@@ -65,6 +66,7 @@ export function ImageUploader({
 			<input
 				type="file"
 				accept="image/*"
+				multiple={multiple}
 				className="sr-only"
 				onChange={handleChange}
 				disabled={uploading}
@@ -74,10 +76,12 @@ export function ImageUploader({
 				aria-hidden
 			/>
 			<span className="mt-2 text-sm font-medium text-foreground">
-				{uploading ? 'Subiendo…' : 'Arrastra una imagen o haz clic'}
+				{uploading ? 'Subiendo…' : 'Arrastra imágenes o haz clic'}
 			</span>
 			<span className="mt-1 text-xs text-foreground-muted">
-				Se optimiza automáticamente
+				{multiple
+					? 'Puedes subir varias a la vez · Se optimizan automáticamente'
+					: 'Se optimiza automáticamente'}
 			</span>
 		</label>
 	);

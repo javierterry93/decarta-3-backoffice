@@ -3,7 +3,11 @@ import { Dialog } from './ConfirmDialog.tsx';
 import { Button } from '../ui/Button.tsx';
 import { Label } from '../ui/Label.tsx';
 import { Select } from '../ui/Select.tsx';
-import type { ExcelColumnMapping, Product } from '../../types/index.ts';
+import type {
+	Category,
+	ExcelColumnMapping,
+	Product,
+} from '../../types/index.ts';
 
 type ExcelPreviewRow = Record<string, string | number>;
 
@@ -15,12 +19,12 @@ type ExcelImportDialogProps = {
 		rows: ExcelPreviewRow[];
 	}>;
 	guessColumnMappings: (columns: string[]) => ExcelColumnMapping[];
+	categories: Category[];
 	mapRowsToProducts: (
 		rows: ExcelPreviewRow[],
 		mappings: ExcelColumnMapping[],
-		resolveCategoryId: (name: string) => string,
+		categories: Category[],
 	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
-	onResolveCategoryId: (name: string) => string;
 	onImport: (
 		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
 	) => void;
@@ -46,7 +50,7 @@ export function ExcelImportDialog({
 	parseExcelFile,
 	guessColumnMappings,
 	mapRowsToProducts,
-	onResolveCategoryId,
+	categories,
 	onImport,
 	onParseError,
 }: ExcelImportDialogProps) {
@@ -85,7 +89,7 @@ export function ExcelImportDialog({
 		[parseExcelFile, guessColumnMappings, onParseError],
 	);
 
-	const previewProducts = mapRowsToProducts(rows, mappings, onResolveCategoryId);
+	const previewProducts = mapRowsToProducts(rows, mappings, categories);
 
 	const handleImport = useCallback(() => {
 		onImport(previewProducts);

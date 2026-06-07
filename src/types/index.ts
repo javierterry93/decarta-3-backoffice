@@ -21,14 +21,15 @@ export type Category = {
 export type MenuImage = {
 	id: string;
 	name: string;
-	url: string;
-	thumbnailUrl: string;
 	createdAt: string;
+	/** URLs resueltas por el backend (modo remoto). */
+	url?: string;
+	thumbnailUrl?: string;
 };
 
 export type BusinessSettings = {
 	name: string;
-	logoUrl: string | null;
+	logoImageId: string | null;
 	phone: string;
 	address: string;
 	hours: string;

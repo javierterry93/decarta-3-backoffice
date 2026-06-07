@@ -23,12 +23,12 @@ export function productToDraft(product: {
 	imageId: string | null;
 }): ProductEditDraft {
 	return {
-		name: product.name,
-		categoryId: product.categoryId,
-		price: product.price,
-		shortDescription: product.shortDescription,
-		visible: product.visible,
-		imageId: product.imageId,
+		name: product.name ?? '',
+		categoryId: product.categoryId ?? '',
+		price: product.price ?? 0,
+		shortDescription: product.shortDescription ?? '',
+		visible: product.visible ?? true,
+		imageId: product.imageId ?? null,
 	};
 }
 

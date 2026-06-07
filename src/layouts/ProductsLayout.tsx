@@ -1,24 +1,16 @@
-import { Download, MoreHorizontal, Plus, Trash2, Upload } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ProductCategoryList } from '../components/forms/ProductCategoryList.tsx';
 import { ConfirmDialog, Dialog } from '../components/dialogs/ConfirmDialog.tsx';
-import { ExcelImportDialog } from '../components/dialogs/ExcelImportDialog.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import {
 	ProductEditLayout,
 	type ProductEditDraft,
 } from './ProductEditLayout.tsx';
 import { emptyProductDraft, productToDraft } from './productDraft.ts';
-import type {
-	Category,
-	ExcelColumnMapping,
-	MenuImage,
-	Product,
-} from '../types/index.ts';
+import type { Category, MenuImage, Product } from '../types/index.ts';
 import { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 import { cn } from '../utils/cn.ts';
-
-type ExcelPreviewRow = Record<string, string | number>;
 
 type ProductEditor = { mode: 'create' } | { mode: 'edit'; id: string };
 
@@ -28,30 +20,17 @@ type ProductsLayoutProps = {
 	products: Product[];
 	categories: Category[];
 	images: MenuImage[];
+	imageMap: Record<string, string>;
 	visibilityFilter?: ProductVisibilityFilter;
 	onClearVisibilityFilter?: () => void;
+	editProductId?: string | null;
+	onCloseEditor?: () => void;
 	onAddProduct: (data: ProductEditDraft) => void;
 	onUpdateProduct: (id: string, data: Partial<Product>) => void;
 	onDuplicateProduct: (id: string) => void;
 	onDeleteProduct: (id: string) => void;
 	onDeleteProducts: (ids: string[]) => void;
 	onReorderProducts: (categoryId: string, orderedIds: string[]) => void;
-	onExportExcel: () => void;
-	onExportCsv: () => void;
-	onImportProducts: (
-		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
-	) => void;
-	onResolveCategoryId: (name: string) => string;
-	parseExcelFile: (file: File) => Promise<{
-		columns: string[];
-		rows: ExcelPreviewRow[];
-	}>;
-	guessColumnMappings: (columns: string[]) => ExcelColumnMapping[];
-	mapRowsToProducts: (
-		rows: ExcelPreviewRow[],
-		mappings: ExcelColumnMapping[],
-		resolveCategoryId: (name: string) => string,
-	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
 	onNotify: (message: string) => void;
 };
 
@@ -59,29 +38,24 @@ export function ProductsLayout({
 	products,
 	categories,
 	images,
+	imageMap,
 	visibilityFilter = 'all',
 	onClearVisibilityFilter,
+	editProductId,
+	onCloseEditor,
 	onAddProduct,
 	onUpdateProduct,
 	onDuplicateProduct,
 	onDeleteProduct,
 	onDeleteProducts,
 	onReorderProducts,
-	onExportExcel,
-	onExportCsv,
-	onImportProducts,
-	onResolveCategoryId,
-	parseExcelFile,
-	guessColumnMappings,
-	mapRowsToProducts,
 	onNotify,
 }: ProductsLayoutProps) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [editor, setEditor] = useState<ProductEditor | null>(null);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
-	const [importOpen, setImportOpen] = useState(false);
-	const [actionsOpen, setActionsOpen] = useState(false);
+	const consumedEditProductIdRef = useRef<string | null>(null);
 	const isHiddenFilter = visibilityFilter === 'hidden';
 
 	const filteredProducts = useMemo(
@@ -101,6 +75,26 @@ export function ProductsLayout({
 		return null;
 	}, [editor, categories, editingProduct]);
 
+	const closeEditor = useCallback(() => {
+		setEditor(null);
+		onCloseEditor?.();
+	}, [onCloseEditor]);
+
+	useEffect(() => {
+		if (!editProductId) {
+			consumedEditProductIdRef.current = null;
+			return;
+		}
+		if (consumedEditProductIdRef.current === editProductId) return;
+
+		const product = products.find((item) => item.id === editProductId);
+		if (!product) return;
+
+		consumedEditProductIdRef.current = editProductId;
+		setEditor({ mode: 'edit', id: editProductId });
+		onCloseEditor?.();
+	}, [editProductId, products, onCloseEditor]);
+
 	const handleReorder = useCallback(
 		(categoryId: string, orderedIds: string[]) => {
 			onReorderProducts(categoryId, orderedIds);
@@ -113,14 +107,12 @@ export function ProductsLayout({
 		(data: ProductEditDraft) => {
 			if (editor?.mode === 'create') {
 				onAddProduct(data);
-				onNotify('Producto creado');
 			} else if (editor?.mode === 'edit') {
 				onUpdateProduct(editor.id, data);
-				onNotify('Producto guardado');
 			}
-			setEditor(null);
+			closeEditor();
 		},
-		[editor, onAddProduct, onUpdateProduct, onNotify],
+		[editor, onAddProduct, onUpdateProduct, closeEditor],
 	);
 
 	const handleBulkDelete = useCallback(() => {
@@ -150,42 +142,11 @@ export function ProductsLayout({
 				</p>
 
 				<div className="hidden flex-wrap justify-end gap-2 lg:flex">
-					<Button variant="outline" size="sm" onClick={() => setImportOpen(true)}>
-						<Upload className="h-4 w-4" />
-						Importar Excel
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => {
-							onExportExcel();
-							onNotify('Carta exportada a Excel');
-						}}>
-						<Download className="h-4 w-4" />
-						Exportar
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => {
-							onExportCsv();
-							onNotify('Carta exportada a CSV');
-						}}>
-						CSV
-					</Button>
 					<Button onClick={() => setEditor({ mode: 'create' })}>
 						<Plus className="h-4 w-4" />
 						Nuevo producto
 					</Button>
 				</div>
-
-				<Button
-					variant="outline"
-					className="w-full lg:hidden"
-					onClick={() => setActionsOpen(true)}>
-					<MoreHorizontal className="h-4 w-4" />
-					Importar / exportar
-				</Button>
 			</div>
 
 			{isHiddenFilter && (
@@ -241,7 +202,7 @@ export function ProductsLayout({
 				<ProductCategoryList
 					products={filteredProducts}
 					categories={categories}
-					images={images}
+					imageMap={imageMap}
 					selectedIds={selectedIds}
 					onSelectionChange={setSelectedIds}
 					onReorder={handleReorder}
@@ -263,47 +224,8 @@ export function ProductsLayout({
 			</Button>
 
 			<Dialog
-				open={actionsOpen}
-				onClose={() => setActionsOpen(false)}
-				title="Importar / exportar">
-				<div className="flex flex-col gap-2">
-					<Button
-						variant="outline"
-						className="w-full justify-start"
-						onClick={() => {
-							setActionsOpen(false);
-							setImportOpen(true);
-						}}>
-						<Upload className="h-4 w-4" />
-						Importar Excel
-					</Button>
-					<Button
-						variant="outline"
-						className="w-full justify-start"
-						onClick={() => {
-							onExportExcel();
-							onNotify('Carta exportada a Excel');
-							setActionsOpen(false);
-						}}>
-						<Download className="h-4 w-4" />
-						Exportar Excel
-					</Button>
-					<Button
-						variant="outline"
-						className="w-full justify-start"
-						onClick={() => {
-							onExportCsv();
-							onNotify('Carta exportada a CSV');
-							setActionsOpen(false);
-						}}>
-						Exportar CSV
-					</Button>
-				</div>
-			</Dialog>
-
-			<Dialog
 				open={editor !== null && editorDraft !== null}
-				onClose={() => setEditor(null)}
+				onClose={closeEditor}
 				title={editor?.mode === 'create' ? 'Nuevo producto' : 'Editar producto'}>
 				{editorDraft && (
 					<ProductEditLayout
@@ -317,13 +239,13 @@ export function ProductsLayout({
 						images={images}
 						submitLabel={editor?.mode === 'create' ? 'Crear producto' : 'Guardar'}
 						onSave={handleSave}
-						onCancel={() => setEditor(null)}
+						onCancel={closeEditor}
 						onDuplicate={
 							editor?.mode === 'edit'
 								? () => {
 										onDuplicateProduct(editor.id);
 										onNotify('Producto duplicado');
-										setEditor(null);
+										closeEditor();
 									}
 								: undefined
 						}
@@ -331,7 +253,7 @@ export function ProductsLayout({
 							editor?.mode === 'edit'
 								? () => {
 										setDeleteId(editor.id);
-										setEditor(null);
+										closeEditor();
 									}
 								: undefined
 						}
@@ -364,20 +286,6 @@ export function ProductsLayout({
 				description={`¿Seguro que quieres eliminar ${selectedIds.size} productos?`}
 				onConfirm={handleBulkDelete}
 				onCancel={() => setBulkDeleteOpen(false)}
-			/>
-
-			<ExcelImportDialog
-				open={importOpen}
-				onClose={() => setImportOpen(false)}
-				parseExcelFile={parseExcelFile}
-				guessColumnMappings={guessColumnMappings}
-				mapRowsToProducts={mapRowsToProducts}
-				onResolveCategoryId={onResolveCategoryId}
-				onImport={(items) => {
-					onImportProducts(items);
-					onNotify(`${items.length} productos importados`);
-				}}
-				onParseError={() => onNotify('No se pudo leer el archivo')}
 			/>
 		</MobilePageLayout>
 	);

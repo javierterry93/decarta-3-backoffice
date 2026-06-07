@@ -68,8 +68,10 @@ export type CategoryResolveInput = {
 
 export type ImageCreateInput = {
 	name: string;
-	url: string;
-	thumbnailUrl: string;
+	url?: string;
+	thumbnailUrl?: string;
+	fullBlob?: Blob;
+	thumbBlob?: Blob;
 };
 
 export type BusinessSettingsUpdateInput = Partial<BusinessSettings>;

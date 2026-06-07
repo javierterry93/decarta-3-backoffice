@@ -56,7 +56,7 @@ function nextOrderInCategory(products: Product[], categoryId: string): number {
 
 const defaultSettings: BusinessSettings = {
 	name: 'Mi Restaurante',
-	logoUrl: null,
+	logoImageId: null,
 	phone: '',
 	address: '',
 	hours: 'Lun–Dom: 12:00–23:00',
@@ -80,12 +80,13 @@ type MenuState = {
 	updateCategory: (id: string, data: Partial<Category>) => void;
 	deleteCategory: (id: string) => void;
 	reorderCategories: (orderedIds: string[]) => void;
-	addImage: (image: Omit<MenuImage, 'id' | 'createdAt'>) => string;
+	addImage: (image: Pick<MenuImage, 'name'> & { id: string }) => string;
 	deleteImage: (id: string) => void;
 	updateSettings: (data: Partial<BusinessSettings>) => void;
 	importProducts: (
 		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
 	) => void;
+	resetMenu: () => void;
 };
 
 export const useMenuStore = create<MenuState>()(
@@ -225,11 +226,10 @@ export const useMenuStore = create<MenuState>()(
 				}));
 			},
 
-			addImage: (image) => {
-				const id = generateId();
+			addImage: ({ id, name }) => {
 				const menuImage: MenuImage = {
-					...image,
 					id,
+					name,
 					createdAt: now(),
 				};
 				set((state) => ({
@@ -276,12 +276,27 @@ export const useMenuStore = create<MenuState>()(
 					lastModified: timestamp,
 				}));
 			},
+
+			resetMenu: () => {
+				set({
+					products: [],
+					categories: [],
+					images: [],
+					settings: { ...defaultSettings },
+					lastModified: now(),
+				});
+			},
 		}),
 		{
 			name: 'decarta-menu-store',
-			version: 1,
+			version: 2,
 			migrate: (persisted, version) => {
-				const state = persisted as { products?: Product[] };
+				let state = persisted as {
+					products?: Product[];
+					settings?: BusinessSettings & { logoUrl?: string | null };
+					images?: MenuImage[];
+				};
+
 				if (version < 1 && state.products) {
 					const byCategory = new Map<string, Product[]>();
 					for (const product of state.products) {
@@ -297,7 +312,7 @@ export const useMenuStore = create<MenuState>()(
 								orderById.set(product.id, product.order ?? index + 1);
 							});
 					}
-					return {
+					state = {
 						...state,
 						products: state.products.map((product) => ({
 							...product,
@@ -305,7 +320,38 @@ export const useMenuStore = create<MenuState>()(
 						})),
 					};
 				}
-				return persisted;
+
+				if (version < 2) {
+					const settings = state.settings;
+					const images = state.images ?? [];
+					const legacyLogoUrl = settings?.logoUrl;
+					const logoImageId =
+						settings?.logoImageId ??
+						(legacyLogoUrl
+							? (images.find(
+									(i) => i.url === legacyLogoUrl || i.thumbnailUrl === legacyLogoUrl,
+								)?.id ?? null)
+							: null);
+
+					return {
+						...state,
+						settings: settings
+							? {
+									...settings,
+									logoImageId,
+									logoUrl: undefined,
+								}
+							: settings,
+						images: images.map(({ id, name, createdAt, url, thumbnailUrl }) => ({
+							id,
+							name,
+							createdAt,
+							...(url && !url.startsWith('data:') ? { url, thumbnailUrl } : {}),
+						})),
+					};
+				}
+
+				return state;
 			},
 		},
 	),

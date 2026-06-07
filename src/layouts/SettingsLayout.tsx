@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +14,17 @@ import {
 	CardHeader,
 	CardTitle,
 } from '../components/ui/Card.tsx';
-import type { BusinessSettings } from '../types/index.ts';
+import { MenuImportExportSection } from '../components/forms/MenuImportExportSection.tsx';
+import { ResetMenuDialog } from '../components/dialogs/ResetMenuDialog.tsx';
+import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
+import type {
+	BusinessSettings,
+	Category,
+	ExcelColumnMapping,
+	Product,
+} from '../types/index.ts';
+
+type ExcelPreviewRow = Record<string, string | number>;
 
 const settingsSchema = z.object({
 	name: z.string().min(1, 'El nombre es obligatorio'),
@@ -29,21 +40,77 @@ type SettingsForm = z.infer<typeof settingsSchema>;
 
 type SettingsLayoutProps = {
 	settings: BusinessSettings;
+	categories: Category[];
 	onSaveSettings: (data: SettingsForm) => void;
 	onUploadImage: (file: File) => Promise<string>;
 	onSetLogo: (imageId: string) => void;
 	onRemoveLogo: () => void;
+	onExportExcel: () => void;
+	onExportCsv: () => void;
+	onImportProducts: (
+		items: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[],
+	) => void;
+	parseExcelFile: (file: File) => Promise<{
+		columns: string[];
+		rows: ExcelPreviewRow[];
+	}>;
+	guessColumnMappings: (columns: string[]) => ExcelColumnMapping[];
+	mapRowsToProducts: (
+		rows: ExcelPreviewRow[],
+		mappings: ExcelColumnMapping[],
+		categories: Category[],
+	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
+	onResetMenu: () => Promise<void>;
 	onNotify: (message: string) => void;
 };
 
+function LogoPreview({
+	logoImageId,
+	onRemove,
+}: {
+	logoImageId: string;
+	onRemove: () => void;
+}) {
+	const logoUrl = useImageObjectUrl(logoImageId, 'full');
+
+	return (
+		<div className="flex items-center gap-4">
+			{logoUrl ? (
+				<img
+					src={logoUrl}
+					alt="Logo"
+					className="h-16 w-16 rounded-full object-cover"
+				/>
+			) : (
+				<div className="flex h-16 w-16 items-center justify-center rounded-full bg-fill text-xs text-foreground-muted">
+					…
+				</div>
+			)}
+			<Button type="button" variant="outline" size="sm" onClick={onRemove}>
+				Quitar logo
+			</Button>
+		</div>
+	);
+}
+
 export function SettingsLayout({
 	settings,
+	categories,
 	onSaveSettings,
 	onUploadImage,
 	onSetLogo,
 	onRemoveLogo,
+	onExportExcel,
+	onExportCsv,
+	onImportProducts,
+	parseExcelFile,
+	guessColumnMappings,
+	mapRowsToProducts,
+	onResetMenu,
 	onNotify,
 }: SettingsLayoutProps) {
+	const [resetOpen, setResetOpen] = useState(false);
+	const [isResetting, setIsResetting] = useState(false);
 	const {
 		register,
 		handleSubmit,
@@ -88,105 +155,147 @@ export function SettingsLayout({
 				</p>
 			</div>
 
-			<form onSubmit={onSubmit} className="w-full max-w-xl space-y-6">
-				<Card>
-					<CardHeader>
-						<CardTitle>Datos del local</CardTitle>
-						<CardDescription>Información que verán tus clientes</CardDescription>
-					</CardHeader>
+			<div className="mx-auto w-full max-w-xl space-y-6">
+				<form onSubmit={onSubmit} className="space-y-6">
+					<Card>
+						<CardHeader>
+							<CardTitle>Datos del local</CardTitle>
+							<CardDescription>Información que verán tus clientes</CardDescription>
+						</CardHeader>
 
-					<div className="space-y-4">
-						<div className="space-y-2">
-							<Label htmlFor="name">Nombre del local</Label>
-							<Input id="name" {...register('name')} />
-							{errors.name && (
-								<p className="text-xs text-accent-orange">{errors.name.message}</p>
-							)}
-						</div>
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="name">Nombre del local</Label>
+								<Input id="name" {...register('name')} />
+								{errors.name && (
+									<p className="text-xs text-accent-orange">{errors.name.message}</p>
+								)}
+							</div>
 
-						<div className="space-y-2">
-							<Label>Logo</Label>
-							{settings.logoUrl ? (
-								<div className="flex items-center gap-4">
-									<img
-										src={settings.logoUrl}
-										alt="Logo"
-										className="h-16 w-16 rounded-full object-cover"
-									/>
-									<Button
-										type="button"
-										variant="outline"
-										size="sm"
-										onClick={() => {
+							<div className="space-y-2">
+								<Label>Logo</Label>
+								{settings.logoImageId ? (
+									<LogoPreview
+										logoImageId={settings.logoImageId}
+										onRemove={() => {
 											onRemoveLogo();
 											onNotify('Logo eliminado');
-										}}>
-										Quitar logo
-									</Button>
-								</div>
-							) : (
-								<ImageUploader
-									compact
-									onUpload={async (file) => {
-										const id = await onUploadImage(file);
-										onSetLogo(id);
-										onNotify('Logo subido');
-									}}
+										}}
+									/>
+								) : (
+									<ImageUploader
+										compact
+										multiple={false}
+										onUpload={async (files) => {
+											const id = await onUploadImage(files[0]!);
+											onSetLogo(id);
+											onNotify('Logo subido');
+										}}
+									/>
+								)}
+							</div>
+
+							<div className="space-y-2">
+								<Label htmlFor="phone">Teléfono</Label>
+								<Input id="phone" type="tel" {...register('phone')} />
+							</div>
+
+							<div className="space-y-2">
+								<Label htmlFor="address">Dirección</Label>
+								<Input id="address" {...register('address')} />
+							</div>
+
+							<div className="space-y-2">
+								<Label htmlFor="hours">Horarios</Label>
+								<Input
+									id="hours"
+									placeholder="Lun–Dom: 12:00–23:00"
+									{...register('hours')}
 								/>
-							)}
+							</div>
 						</div>
+					</Card>
 
-						<div className="space-y-2">
-							<Label htmlFor="phone">Teléfono</Label>
-							<Input id="phone" type="tel" {...register('phone')} />
+					<Card>
+						<CardHeader>
+							<CardTitle>Redes sociales</CardTitle>
+						</CardHeader>
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="instagram">Instagram</Label>
+								<Input
+									id="instagram"
+									placeholder="@tulocal"
+									{...register('socialInstagram')}
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="facebook">Facebook</Label>
+								<Input id="facebook" {...register('socialFacebook')} />
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor="twitter">X / Twitter</Label>
+								<Input id="twitter" {...register('socialTwitter')} />
+							</div>
 						</div>
+					</Card>
 
-						<div className="space-y-2">
-							<Label htmlFor="address">Dirección</Label>
-							<Input id="address" {...register('address')} />
-						</div>
+					<Button
+						type="submit"
+						className="sticky bottom-0 w-full lg:static lg:w-auto">
+						Guardar cambios
+					</Button>
+				</form>
 
-						<div className="space-y-2">
-							<Label htmlFor="hours">Horarios</Label>
-							<Input
-								id="hours"
-								placeholder="Lun–Dom: 12:00–23:00"
-								{...register('hours')}
-							/>
-						</div>
-					</div>
-				</Card>
+				<MenuImportExportSection
+					categories={categories}
+					onExportExcel={onExportExcel}
+					onExportCsv={onExportCsv}
+					onImportProducts={onImportProducts}
+					parseExcelFile={parseExcelFile}
+					guessColumnMappings={guessColumnMappings}
+					mapRowsToProducts={mapRowsToProducts}
+					onNotify={onNotify}
+				/>
 
-				<Card>
+				<Card className="border-accent-orange/20">
 					<CardHeader>
-						<CardTitle>Redes sociales</CardTitle>
+						<CardTitle>Zona peligrosa</CardTitle>
+						<CardDescription>
+							Elimina toda la carta y restaura la configuración por defecto
+						</CardDescription>
 					</CardHeader>
-					<div className="space-y-4">
-						<div className="space-y-2">
-							<Label htmlFor="instagram">Instagram</Label>
-							<Input
-								id="instagram"
-								placeholder="@tulocal"
-								{...register('socialInstagram')}
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="facebook">Facebook</Label>
-							<Input id="facebook" {...register('socialFacebook')} />
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="twitter">X / Twitter</Label>
-							<Input id="twitter" {...register('socialTwitter')} />
-						</div>
-					</div>
+					<Button
+						type="button"
+						variant="destructive"
+						onClick={() => setResetOpen(true)}>
+						<Trash2 className="h-4 w-4" />
+						Borrar toda la carta
+					</Button>
 				</Card>
+			</div>
 
-				<Button
-					type="submit"
-					className="sticky bottom-0 w-full lg:static lg:w-auto">
-					Guardar cambios
-				</Button>
-			</form>
+			<ResetMenuDialog
+				open={resetOpen}
+				onClose={() => {
+					if (!isResetting) setResetOpen(false);
+				}}
+				isPending={isResetting}
+				onConfirm={() => {
+					setIsResetting(true);
+					void onResetMenu()
+						.then(() => {
+							setResetOpen(false);
+							onNotify('Carta borrada');
+						})
+						.catch(() => {
+							onNotify('No se pudo borrar la carta');
+						})
+						.finally(() => {
+							setIsResetting(false);
+						});
+				}}
+			/>
 		</MobilePageLayout>
 	);
 }

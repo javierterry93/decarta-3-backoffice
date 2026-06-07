@@ -1,15 +1,23 @@
-import { Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
-import { CategorySorter } from '../components/forms/CategorySorter.tsx';
-import { ConfirmDialog } from '../components/dialogs/ConfirmDialog.tsx';
+import { Plus } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { CategoryList } from '../components/forms/CategoryList.tsx';
+import { ConfirmDialog, Dialog } from '../components/dialogs/ConfirmDialog.tsx';
 import { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 import { Button } from '../components/ui/Button.tsx';
-import type { Category } from '../types/index.ts';
+import {
+	CategoryEditLayout,
+	type CategoryEditDraft,
+} from './CategoryEditLayout.tsx';
+import { categoryToDraft, emptyCategoryDraft } from './categoryDraft.ts';
+import type { Category, Product } from '../types/index.ts';
+
+type CategoryEditor = { mode: 'create' } | { mode: 'edit'; id: string };
 
 type CategoriesLayoutProps = {
 	categories: Category[];
-	onAddCategory: () => void;
-	onUpdateCategory: (id: string, data: Partial<Category>) => void;
+	products: Product[];
+	onAddCategory: (data: CategoryEditDraft) => void;
+	onUpdateCategory: (id: string, data: CategoryEditDraft) => void;
 	onDeleteCategory: (id: string) => void;
 	onReorderCategories: (orderedIds: string[]) => void;
 	onNotify: (message: string) => void;
@@ -17,103 +25,135 @@ type CategoriesLayoutProps = {
 
 export function CategoriesLayout({
 	categories,
+	products,
 	onAddCategory,
 	onUpdateCategory,
 	onDeleteCategory,
 	onReorderCategories,
 	onNotify,
 }: CategoriesLayoutProps) {
-	const [localCategories, setLocalCategories] = useState(categories);
-	const [prevCategories, setPrevCategories] = useState(categories);
+	const [editor, setEditor] = useState<CategoryEditor | null>(null);
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 
-	if (categories !== prevCategories) {
-		setPrevCategories(categories);
-		setLocalCategories(categories);
-	}
+	const productCountByCategory = useMemo(() => {
+		const counts: Record<string, number> = {};
+		for (const product of products) {
+			counts[product.categoryId] = (counts[product.categoryId] ?? 0) + 1;
+		}
+		return counts;
+	}, [products]);
 
-	const handleUpdate = (id: string, data: Partial<Category>) => {
-		setLocalCategories((prev) =>
-			prev.map((c) => (c.id === id ? { ...c, ...data } : c)),
-		);
-	};
+	const editingCategory = useMemo(() => {
+		if (editor?.mode !== 'edit') return null;
+		return categories.find((category) => category.id === editor.id) ?? null;
+	}, [categories, editor]);
 
-	const handlePersist = (id: string) => {
-		const category = localCategories.find((c) => c.id === id);
-		if (category) onUpdateCategory(id, category);
-	};
+	const editorDraft = useMemo(() => {
+		if (editor?.mode === 'create') return emptyCategoryDraft();
+		if (editingCategory) return categoryToDraft(editingCategory);
+		return null;
+	}, [editor, editingCategory]);
 
-	const handleReorder = (orderedIds: string[]) => {
-		setLocalCategories((prev) =>
-			[...prev]
-				.map((c) => {
-					const index = orderedIds.indexOf(c.id);
-					return index >= 0 ? { ...c, order: index + 1 } : c;
-				})
-				.sort((a, b) => a.order - b.order),
-		);
-		onReorderCategories(orderedIds);
-	};
+	const handleReorder = useCallback(
+		(orderedIds: string[]) => {
+			onReorderCategories(orderedIds);
+			onNotify('Orden actualizado');
+		},
+		[onReorderCategories, onNotify],
+	);
 
-	const handleToggleVisible = (id: string, visible: boolean) => {
-		handleUpdate(id, { visible });
-		onUpdateCategory(id, { visible });
-		onNotify(visible ? 'Categoría visible' : 'Categoría oculta');
-	};
+	const handleSave = useCallback(
+		(data: CategoryEditDraft) => {
+			if (editor?.mode === 'create') {
+				onAddCategory(data);
+			} else if (editor?.mode === 'edit') {
+				onUpdateCategory(editor.id, data);
+			}
+			setEditor(null);
+		},
+		[editor, onAddCategory, onUpdateCategory],
+	);
+
+	const deleteCategory = categories.find((category) => category.id === deleteId);
+	const deleteProductCount = deleteId
+		? (productCountByCategory[deleteId] ?? 0)
+		: 0;
 
 	return (
 		<MobilePageLayout>
-			<div className="space-y-3 lg:flex lg:items-center lg:justify-between lg:gap-4">
+			<div className="space-y-3 lg:flex lg:items-start lg:justify-between lg:gap-4">
 				<div className="hidden lg:block">
 					<h1 className="text-2xl font-bold text-foreground">Categorías</h1>
 					<p className="mt-1 text-sm text-foreground-muted">
-						Arrastra para cambiar el orden
+						Orden de la carta · Arrastra para reordenar
 					</p>
 				</div>
 				<p className="text-sm text-foreground-muted lg:hidden">
-					Mantén pulsado ≡ para reordenar
+					Toca una categoría para editarla · Mantén pulsado ≡ para ordenar
 				</p>
-				<Button
-					className="w-full lg:w-auto"
-					onClick={() => {
-						onAddCategory();
-						onNotify('Nueva categoría añadida');
-					}}>
-					<Plus className="h-4 w-4" />
-					Nueva categoría
-				</Button>
+
+				<div className="hidden flex-wrap justify-end gap-2 lg:flex">
+					<Button onClick={() => setEditor({ mode: 'create' })}>
+						<Plus className="h-4 w-4" />
+						Nueva categoría
+					</Button>
+				</div>
 			</div>
 
-			<CategorySorter
-				categories={localCategories}
+			<CategoryList
+				categories={categories}
+				productCountByCategory={productCountByCategory}
 				onReorder={handleReorder}
-				onUpdate={handleUpdate}
-				onPersist={handlePersist}
-				onToggleVisible={handleToggleVisible}
+				onEdit={(id) => setEditor({ mode: 'edit', id })}
 				onDelete={setDeleteId}
-				onNotify={onNotify}
 			/>
 
-			{localCategories.length > 0 && (
-				<div className="hidden flex-wrap gap-2 lg:flex">
-					{localCategories.map((cat) => (
-						<Button
-							key={cat.id}
-							variant="ghost"
-							size="sm"
-							onClick={() => setDeleteId(cat.id)}
-							className="text-accent-orange">
-							<Trash2 className="h-3 w-3" />
-							Eliminar {cat.name || 'sin nombre'}
-						</Button>
-					))}
-				</div>
-			)}
+			<Button
+				size="icon"
+				className="fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] right-3 z-30 h-14 w-14 rounded-full shadow-lg lg:hidden"
+				onClick={() => setEditor({ mode: 'create' })}
+				aria-label="Nueva categoría">
+				<Plus className="h-6 w-6" />
+			</Button>
+
+			<Dialog
+				open={editor !== null && editorDraft !== null}
+				onClose={() => setEditor(null)}
+				title={editor?.mode === 'create' ? 'Nueva categoría' : 'Editar categoría'}>
+				{editorDraft && (
+					<CategoryEditLayout
+						key={
+							editor?.mode === 'create'
+								? 'create'
+								: `edit-${editor?.mode === 'edit' ? editor.id : ''}`
+						}
+						initialDraft={editorDraft}
+						productCount={
+							editor?.mode === 'edit' ? (productCountByCategory[editor.id] ?? 0) : 0
+						}
+						submitLabel={editor?.mode === 'create' ? 'Crear categoría' : 'Guardar'}
+						onSave={handleSave}
+						onCancel={() => setEditor(null)}
+						onDelete={
+							editor?.mode === 'edit'
+								? () => {
+										setDeleteId(editor.id);
+										setEditor(null);
+									}
+								: undefined
+						}
+					/>
+				)}
+			</Dialog>
 
 			<ConfirmDialog
 				open={deleteId !== null}
 				title="Eliminar categoría"
-				description="¿Seguro? Los productos pasarán a otra categoría."
+				description={
+					deleteProductCount > 0
+						? `¿Seguro? «${deleteCategory?.name || 'Sin nombre'}» tiene ${deleteProductCount} producto${deleteProductCount !== 1 ? 's' : ''}. Pasarán a otra categoría.`
+						: `¿Seguro que quieres eliminar «${deleteCategory?.name || 'Sin nombre'}»?`
+				}
 				onConfirm={() => {
 					if (deleteId) {
 						onDeleteCategory(deleteId);

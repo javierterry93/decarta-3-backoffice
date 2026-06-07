@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '../../utils/cn.ts';
-import type { Category, MenuImage, Product } from '../../types/index.ts';
+import type { Category, Product } from '../../types/index.ts';
+import {
+	isSearchActive,
+	matchesSearchQuery,
+} from '../../utils/searchText.ts';
+import { matchesPriceSearchQuery } from '../../utils/currency.ts';
+import { ListSearchEmpty, ListSearchInput } from './ListSearchInput.tsx';
 import { DesktopCategoryProductTable } from './productCategoryList/DesktopCategoryProductTable.tsx';
 import { MobileCategoryProductTable } from './productCategoryList/MobileCategoryProductTable.tsx';
 import {
@@ -12,7 +18,7 @@ import {
 type ProductCategoryListProps = {
 	products: Product[];
 	categories: Category[];
-	images: MenuImage[];
+	imageMap: Record<string, string>;
 	selectedIds: Set<string>;
 	onSelectionChange: (ids: Set<string>) => void;
 	onReorder: (categoryId: string, orderedIds: string[]) => void;
@@ -21,6 +27,19 @@ type ProductCategoryListProps = {
 	onDelete: (productId: string) => void;
 	className?: string;
 };
+
+function productMatchesSearch(
+	product: Product,
+	categoryName: string,
+	query: string,
+): boolean {
+	return (
+		matchesSearchQuery(product.name, query) ||
+		matchesSearchQuery(product.shortDescription ?? '', query) ||
+		matchesSearchQuery(categoryName, query) ||
+		matchesPriceSearchQuery(product.price, query)
+	);
+}
 
 function CategoryProductTable(props: CategoryProductTableProps) {
 	const isLg = useIsLgScreen();
@@ -43,7 +62,7 @@ function CategoryProductTable(props: CategoryProductTableProps) {
 export function ProductCategoryList({
 	products,
 	categories,
-	images,
+	imageMap,
 	selectedIds,
 	onSelectionChange,
 	onReorder,
@@ -52,22 +71,36 @@ export function ProductCategoryList({
 	onDelete,
 	className,
 }: ProductCategoryListProps) {
-	const imageMap = useMemo(
-		() => Object.fromEntries(images.map((i) => [i.id, i.thumbnailUrl])),
-		[images],
-	);
+	const [query, setQuery] = useState('');
+	const reorderEnabled = !isSearchActive(query);
 
 	const sortedCategories = useMemo(
 		() => [...categories].sort((a, b) => a.order - b.order),
 		[categories],
 	);
 
+	const categoryNameById = useMemo(
+		() => Object.fromEntries(categories.map((category) => [category.id, category.name])),
+		[categories],
+	);
+
+	const filteredProducts = useMemo(() => {
+		if (!isSearchActive(query)) return products;
+		return products.filter((product) =>
+			productMatchesSearch(
+				product,
+				categoryNameById[product.categoryId] ?? '',
+				query,
+			),
+		);
+	}, [products, query, categoryNameById]);
+
 	const productsByCategory = useMemo(() => {
 		const map = new Map<string, Product[]>();
 		for (const category of categories) {
 			map.set(category.id, []);
 		}
-		for (const product of products) {
+		for (const product of filteredProducts) {
 			const list = map.get(product.categoryId);
 			if (list) list.push(product);
 		}
@@ -75,7 +108,7 @@ export function ProductCategoryList({
 			list.sort((a, b) => a.order - b.order);
 		}
 		return map;
-	}, [products, categories]);
+	}, [filteredProducts, categories]);
 
 	if (products.length === 0) {
 		return (
@@ -86,21 +119,33 @@ export function ProductCategoryList({
 	}
 
 	return (
-		<div className={cn('space-y-8', className)}>
-			{sortedCategories.map((category) => (
-				<CategoryProductTable
-					key={category.id}
-					category={category}
-					products={productsByCategory.get(category.id) ?? []}
-					imageMap={imageMap}
-					selectedIds={selectedIds}
-					onSelectionChange={onSelectionChange}
-					onReorder={onReorder}
-					onEdit={onEdit}
-					onDuplicate={onDuplicate}
-					onDelete={onDelete}
-				/>
-			))}
+		<div className={cn('space-y-4', className)}>
+			<ListSearchInput
+				value={query}
+				onChange={setQuery}
+				placeholder="Buscar productos…"
+			/>
+			{filteredProducts.length === 0 ? (
+				<ListSearchEmpty query={query} />
+			) : (
+				<div className="space-y-8">
+					{sortedCategories.map((category) => (
+						<CategoryProductTable
+							key={category.id}
+							category={category}
+							products={productsByCategory.get(category.id) ?? []}
+							imageMap={imageMap}
+							selectedIds={selectedIds}
+							onSelectionChange={onSelectionChange}
+							onReorder={onReorder}
+							onEdit={onEdit}
+							onDuplicate={onDuplicate}
+							onDelete={onDelete}
+							reorderEnabled={reorderEnabled}
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

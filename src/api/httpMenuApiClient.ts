@@ -114,5 +114,7 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 				method: 'PATCH',
 				body: JSON.stringify(input),
 			}),
+
+		resetMenu: () => request(baseUrl, apiRoutes.menu, { method: 'DELETE' }),
 	};
 }

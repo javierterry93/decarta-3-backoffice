@@ -1,5 +1,5 @@
 export { menuService } from './menuService.ts';
-export { uploadImage } from './imageService.ts';
+export { uploadImage, uploadImages } from './imageService.ts';
 export {
 	getMenuApiClient,
 	getMenuApiMode,
