@@ -1,23 +1,35 @@
 import type { MenuApiClient } from './menuApiClient.ts';
-import type { MenuApiMode } from './types.ts';
+import {
+	resolveMenuApiMode,
+	usesRemoteImageUrls,
+	type MenuApiMode,
+} from '../config/menuApiMode.ts';
+import {
+	connectDatabaseSync,
+	createMenuApiClientFromRepository,
+} from '../database/index.ts';
 import { createHttpMenuApiClient } from './httpMenuApiClient.ts';
-import { localMenuApiClient } from './localMenuApiClient.ts';
 
 let client: MenuApiClient | null = null;
 
 export function getMenuApiMode(): MenuApiMode {
-	const mode = import.meta.env.VITE_MENU_API;
-	return mode === 'remote' ? 'remote' : 'local';
+	return resolveMenuApiMode();
 }
+
+export { usesRemoteImageUrls };
+
+/** @deprecated Usa usesRemoteImageUrls */
+export const isPersistedRemoteMode = usesRemoteImageUrls;
 
 export function getMenuApiClient(): MenuApiClient {
 	if (client) return client;
 
-	client =
-		getMenuApiMode() === 'remote'
-			? createHttpMenuApiClient(import.meta.env.VITE_API_BASE_URL ?? '/api')
-			: localMenuApiClient;
+	if (resolveMenuApiMode() === 'remote') {
+		client = createHttpMenuApiClient(import.meta.env.VITE_API_BASE_URL ?? '/api');
+		return client;
+	}
 
+	client = createMenuApiClientFromRepository(connectDatabaseSync());
 	return client;
 }
 

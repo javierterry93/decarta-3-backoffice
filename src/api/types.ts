@@ -80,4 +80,4 @@ export type EntityIdResponse = {
 	id: string;
 };
 
-export type MenuApiMode = 'local' | 'remote';
+export type { MenuApiMode } from '../config/menuApiMode.ts';

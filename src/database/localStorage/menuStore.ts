@@ -5,8 +5,10 @@ import type {
 	Category,
 	MenuImage,
 	Product,
-} from '../types/index.ts';
-import { generateId } from '../utils/format.ts';
+} from '../../types/index.ts';
+import { generateId } from '../../utils/format.ts';
+import { createMenuStorePersistStorage } from './persistStorage.ts';
+import { LOCAL_STORAGE_KEYS } from './types.ts';
 
 const now = () => new Date().toISOString();
 
@@ -288,7 +290,8 @@ export const useMenuStore = create<MenuState>()(
 			},
 		}),
 		{
-			name: 'decarta-menu-store',
+			name: LOCAL_STORAGE_KEYS.menuStore,
+			storage: createMenuStorePersistStorage(),
 			version: 2,
 			migrate: (persisted, version) => {
 				let state = persisted as {

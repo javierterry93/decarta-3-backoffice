@@ -1,6 +1,6 @@
 import {
 	getMenuApiClient,
-	getMenuApiMode,
+	usesRemoteImageUrls,
 } from '../../api/getMenuApiClient.ts';
 import type { MenuImage } from '../../types/index.ts';
 import {
@@ -32,7 +32,7 @@ export async function resolveImageObjectUrl(
 	variant: 'full' | 'thumb',
 	image?: MenuImage,
 ): Promise<string | null> {
-	if (getMenuApiMode() === 'remote') {
+	if (usesRemoteImageUrls()) {
 		const remote =
 			image ??
 			(await getMenuApiClient()
@@ -85,7 +85,7 @@ export async function clearAllLocalImageStorage(): Promise<void> {
 }
 
 export async function migrateLegacyImagesIfNeeded(): Promise<void> {
-	if (getMenuApiMode() === 'remote') return;
+	if (usesRemoteImageUrls()) return;
 	if (localStorage.getItem('decarta-images-v2-migrated') === '1') return;
 
 	const snapshot = await getMenuApiClient().getMenu();
@@ -102,7 +102,7 @@ export async function migrateLegacyImagesIfNeeded(): Promise<void> {
 	}
 
 	if (migrated || snapshot.images.some((i) => i.url || i.thumbnailUrl)) {
-		const { useMenuStore } = await import('../../store/menuStore.ts');
+		const { useMenuStore } = await import('../../database/localStorage/menuStore.ts');
 		useMenuStore.setState((state) => ({
 			images: state.images.map(({ id, name, createdAt }) => ({
 				id,
