@@ -5,7 +5,9 @@ import type { DatabaseConnectorFactory } from './types.ts';
 let connectorFactory: DatabaseConnectorFactory | null = null;
 let cachedConnection: DatabaseConnection | null = null;
 
-export function registerDatabaseConnector(factory: DatabaseConnectorFactory): void {
+export function registerDatabaseConnector(
+	factory: DatabaseConnectorFactory,
+): void {
 	connectorFactory = factory;
 	cachedConnection = null;
 }

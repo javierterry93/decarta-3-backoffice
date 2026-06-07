@@ -14,20 +14,14 @@ export function createSupabaseConnection(
 	client: SupabaseClient<SupabaseDatabase>,
 	options: SupabaseConnectionOptions = {},
 ): DatabaseConnection {
-	return new SupabaseConnection(
-		client,
-		options.storageBucket ?? 'menu-images',
-	);
+	return new SupabaseConnection(client, options.storageBucket ?? 'menu-images');
 }
 
 class SupabaseConnection implements DatabaseConnection {
 	private connected = false;
 	private readonly repository: SupabaseMenuRepository;
 
-	constructor(
-		client: SupabaseClient<SupabaseDatabase>,
-		storageBucket: string,
-	) {
+	constructor(client: SupabaseClient<SupabaseDatabase>, storageBucket: string) {
 		this.repository = new SupabaseMenuRepository(client, storageBucket);
 	}
 

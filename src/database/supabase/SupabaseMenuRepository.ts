@@ -102,13 +102,14 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async getMenu() {
-		const [products, categories, images, settings, lastModified] = await Promise.all([
-			this.listProducts(),
-			this.listCategories(),
-			this.listImages(),
-			this.getSettings(),
-			this.fetchLastModified(),
-		]);
+		const [products, categories, images, settings, lastModified] =
+			await Promise.all([
+				this.listProducts(),
+				this.listCategories(),
+				this.listImages(),
+				this.getSettings(),
+				this.fetchLastModified(),
+			]);
 
 		return { products, categories, images, settings, lastModified };
 	}
@@ -252,7 +253,10 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return { id: newId };
 	}
 
-	async reorderProducts({ categoryId, orderedIds }: ProductReorderInput): Promise<void> {
+	async reorderProducts({
+		categoryId,
+		orderedIds,
+	}: ProductReorderInput): Promise<void> {
 		const timestamp = now();
 
 		await Promise.all(
@@ -285,7 +289,9 @@ export class SupabaseMenuRepository implements MenuRepository {
 		});
 
 		if (rows.length > 0) {
-			const { error } = await this.client.from(SUPABASE_TABLES.products).insert(rows);
+			const { error } = await this.client
+				.from(SUPABASE_TABLES.products)
+				.insert(rows);
 			if (error) {
 				throw wrapDatabaseError('No se pudieron importar productos', error);
 			}
@@ -344,7 +350,10 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return { id };
 	}
 
-	async updateCategory(id: string, input: CategoryUpdateInput): Promise<Category> {
+	async updateCategory(
+		id: string,
+		input: CategoryUpdateInput,
+	): Promise<Category> {
 		const patch = {
 			...(input.name !== undefined ? { name: input.name } : {}),
 			...(input.order !== undefined ? { sort_order: input.order } : {}),
@@ -377,7 +386,10 @@ export class SupabaseMenuRepository implements MenuRepository {
 				.eq('category_id', id);
 
 			if (reassignError) {
-				throw wrapDatabaseError('No se pudieron reasignar productos', reassignError);
+				throw wrapDatabaseError(
+					'No se pudieron reasignar productos',
+					reassignError,
+				);
 			}
 		}
 
@@ -470,8 +482,8 @@ export class SupabaseMenuRepository implements MenuRepository {
 				throw wrapDatabaseError('No se pudo subir la miniatura', thumbUpload.error);
 			}
 
-			url = this.client.storage.from(this.storageBucket).getPublicUrl(fullPath).data
-				.publicUrl;
+			url = this.client.storage.from(this.storageBucket).getPublicUrl(fullPath)
+				.data.publicUrl;
 			thumbnailUrl = this.client.storage
 				.from(this.storageBucket)
 				.getPublicUrl(thumbPath).data.publicUrl;
@@ -500,7 +512,9 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async deleteImage(id: string): Promise<void> {
-		await this.client.storage.from(this.storageBucket).remove([`${id}/full`, `${id}/thumb`]);
+		await this.client.storage
+			.from(this.storageBucket)
+			.remove([`${id}/full`, `${id}/thumb`]);
 
 		const { error: clearProductsError } = await this.client
 			.from(SUPABASE_TABLES.products)
@@ -541,7 +555,9 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return mapBusinessSettingsRow(data as BusinessSettingsRow);
 	}
 
-	async updateSettings(input: BusinessSettingsUpdateInput): Promise<BusinessSettings> {
+	async updateSettings(
+		input: BusinessSettingsUpdateInput,
+	): Promise<BusinessSettings> {
 		const timestamp = now();
 		const patch = {
 			...toBusinessSettingsUpdate(input),

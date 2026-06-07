@@ -45,7 +45,9 @@ export function mapMenuImageRow(row: MenuImageRow): MenuImage {
 	};
 }
 
-export function mapBusinessSettingsRow(row: BusinessSettingsRow): BusinessSettings {
+export function mapBusinessSettingsRow(
+	row: BusinessSettingsRow,
+): BusinessSettings {
 	return {
 		name: row.name,
 		logoImageId: row.logo_image_id,

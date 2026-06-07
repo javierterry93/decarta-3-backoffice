@@ -10,7 +10,9 @@ export async function connectDatabase(
 	return connection;
 }
 
-export function connectDatabaseSync(factory?: DatabaseConnectorFactory): DatabaseConnection {
+export function connectDatabaseSync(
+	factory?: DatabaseConnectorFactory,
+): DatabaseConnection {
 	return factory ? factory() : createDatabaseConnection();
 }
 

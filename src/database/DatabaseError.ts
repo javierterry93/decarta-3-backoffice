@@ -8,7 +8,10 @@ export class DatabaseError extends Error {
 	}
 }
 
-export function wrapDatabaseError(message: string, error: unknown): DatabaseError {
+export function wrapDatabaseError(
+	message: string,
+	error: unknown,
+): DatabaseError {
 	if (error instanceof DatabaseError) return error;
 	const detail =
 		error && typeof error === 'object' && 'message' in error

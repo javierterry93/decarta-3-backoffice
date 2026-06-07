@@ -3,7 +3,10 @@ import { wrapDatabaseError } from '../DatabaseError.ts';
 import type { MenuRepository } from '../MenuRepository.ts';
 import { LocalStorageMenuRepository } from './LocalStorageMenuRepository.ts';
 import { configureLocalStorageEngine } from './persistStorage.ts';
-import type { LocalStorageConnectionOptions, LocalStorageEngine } from './types.ts';
+import type {
+	LocalStorageConnectionOptions,
+	LocalStorageEngine,
+} from './types.ts';
 import { LOCAL_STORAGE_KEYS } from './types.ts';
 
 export function createLocalStorageConnection(

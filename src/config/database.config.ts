@@ -18,7 +18,8 @@ switch (resolveMenuApiMode()) {
 	case 'supabase':
 		registerDatabaseConnector(() =>
 			createSupabaseConnection(createSupabaseEngine(), {
-				storageBucket: import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'menu-images',
+				storageBucket:
+					import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'menu-images',
 			}),
 		);
 		break;

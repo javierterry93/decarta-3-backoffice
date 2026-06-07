@@ -1,10 +1,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '../../utils/cn.ts';
 import type { Category, Product } from '../../types/index.ts';
-import {
-	isSearchActive,
-	matchesSearchQuery,
-} from '../../utils/searchText.ts';
+import { isSearchActive, matchesSearchQuery } from '../../utils/searchText.ts';
 import { matchesPriceSearchQuery } from '../../utils/currency.ts';
 import { ListSearchEmpty, ListSearchInput } from './ListSearchInput.tsx';
 import { DesktopCategoryProductTable } from './productCategoryList/DesktopCategoryProductTable.tsx';
@@ -80,7 +77,10 @@ export function ProductCategoryList({
 	);
 
 	const categoryNameById = useMemo(
-		() => Object.fromEntries(categories.map((category) => [category.id, category.name])),
+		() =>
+			Object.fromEntries(
+				categories.map((category) => [category.id, category.name]),
+			),
 		[categories],
 	);
 

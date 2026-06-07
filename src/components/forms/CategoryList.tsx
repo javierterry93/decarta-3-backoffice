@@ -20,10 +20,7 @@ import { ChevronRight, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { Category } from '../../types/index.ts';
 import { cn } from '../../utils/cn.ts';
-import {
-	isSearchActive,
-	matchesSearchQuery,
-} from '../../utils/searchText.ts';
+import { isSearchActive, matchesSearchQuery } from '../../utils/searchText.ts';
 import { Button } from '../ui/Button.tsx';
 import { ListSearchEmpty, ListSearchInput } from './ListSearchInput.tsx';
 import {

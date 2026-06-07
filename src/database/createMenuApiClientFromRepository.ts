@@ -33,8 +33,10 @@ export function createMenuApiClientFromRepository(
 		importProducts: (items) =>
 			withConnection(connection, (repo) => repo.importProducts(items)),
 
-		listCategories: () => withConnection(connection, (repo) => repo.listCategories()),
-		getCategory: (id) => withConnection(connection, (repo) => repo.getCategory(id)),
+		listCategories: () =>
+			withConnection(connection, (repo) => repo.listCategories()),
+		getCategory: (id) =>
+			withConnection(connection, (repo) => repo.getCategory(id)),
 		createCategory: (input) =>
 			withConnection(connection, (repo) => repo.createCategory(input)),
 		updateCategory: (id, input) =>

@@ -102,7 +102,8 @@ export async function migrateLegacyImagesIfNeeded(): Promise<void> {
 	}
 
 	if (migrated || snapshot.images.some((i) => i.url || i.thumbnailUrl)) {
-		const { useMenuStore } = await import('../../database/localStorage/menuStore.ts');
+		const { useMenuStore } =
+			await import('../../database/localStorage/menuStore.ts');
 		useMenuStore.setState((state) => ({
 			images: state.images.map(({ id, name, createdAt }) => ({
 				id,

@@ -17,6 +17,8 @@ export function resolveMenuApiMode(): MenuApiMode {
 	}
 }
 
-export function usesRemoteImageUrls(mode: MenuApiMode = resolveMenuApiMode()): boolean {
+export function usesRemoteImageUrls(
+	mode: MenuApiMode = resolveMenuApiMode(),
+): boolean {
 	return mode === 'remote' || mode === 'supabase';
 }
