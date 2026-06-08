@@ -42,25 +42,6 @@ export type MenuImageRow = {
 	created_at: string;
 };
 
-/** Fila de la vista business_menu (app cliente, filtrar por business_id) */
-export type BusinessMenuRow = {
-	business_id: string;
-	product_id: string;
-	product_name: string;
-	product_order: number;
-	price: number;
-	short_description: string;
-	image_id: string | null;
-	category_id: string;
-	category_name: string;
-	category_order: number;
-};
-
-export const SUPABASE_VIEWS = {
-	/** Solo app cliente (anon). Backoffice usa tablas. */
-	businessMenu: 'business_menu',
-} as const;
-
 export const SUPABASE_TABLES = {
 	businesses: 'businesses',
 	categories: 'categories',
@@ -70,6 +51,9 @@ export const SUPABASE_TABLES = {
 
 export type SupabaseDatabase = {
 	public: {
+		Enums: Record<string, never>;
+		CompositeTypes: Record<string, never>;
+		Views: Record<string, never>;
 		Functions: {
 			ensure_business: {
 				Args: Record<string, never>;
@@ -104,35 +88,31 @@ export type SupabaseDatabase = {
 				Returns: undefined;
 			};
 		};
-		Views: {
-			business_menu: {
-				Row: BusinessMenuRow;
-			};
-		};
 		Tables: {
 			businesses: {
 				Row: BusinessRow;
-				Insert: Partial<BusinessRow> &
-					Pick<BusinessRow, 'owner_user_id'>;
+				Insert: Partial<BusinessRow> & Pick<BusinessRow, 'owner_user_id'>;
 				Update: Partial<BusinessRow>;
+				Relationships: [];
 			};
 			categories: {
 				Row: CategoryRow;
-				Insert: Partial<CategoryRow> &
-					Pick<CategoryRow, 'id' | 'business_id'>;
+				Insert: Partial<CategoryRow> & Pick<CategoryRow, 'id' | 'business_id'>;
 				Update: Partial<CategoryRow>;
+				Relationships: [];
 			};
 			products: {
 				Row: ProductRow;
-				Insert: Partial<ProductRow> &
-					Pick<ProductRow, 'id' | 'category_id'>;
+				Insert: Partial<ProductRow> & Pick<ProductRow, 'id' | 'category_id'>;
 				Update: Partial<ProductRow>;
+				Relationships: [];
 			};
 			menu_images: {
 				Row: MenuImageRow;
 				Insert: Partial<MenuImageRow> &
 					Pick<MenuImageRow, 'id' | 'business_id' | 'name'>;
 				Update: Partial<MenuImageRow>;
+				Relationships: [];
 			};
 		};
 	};

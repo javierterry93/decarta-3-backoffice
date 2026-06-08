@@ -1,14 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { wrapDatabaseError } from '../DatabaseError.ts';
-import type { SupabaseDatabase } from './types.ts';
+import { wrapDatabaseError } from '../../database/DatabaseError.ts';
+import type { SupabaseDatabase } from '../../database/supabase/types.ts';
 
 export async function callSupabaseRpc<T = void>(
 	client: SupabaseClient<SupabaseDatabase>,
-	functionName: string,
+	functionName: keyof SupabaseDatabase['public']['Functions'],
 	args: Record<string, unknown>,
 	errorMessage: string,
 ): Promise<T> {
-	const { data, error } = await client.rpc(functionName, args);
+	const { data, error } = await client.rpc(functionName, args as never);
 
 	if (error) {
 		throw wrapDatabaseError(errorMessage, error);

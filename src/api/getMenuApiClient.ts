@@ -1,6 +1,6 @@
 import type { MenuApiClient } from './menuApiClient.ts';
 import { connectDatabaseSync } from '../database/connectDatabase.ts';
-import { createConnectedMenuClient } from '../database/createConnectedMenuClient.ts';
+import { createConnectedMenuClient } from './createConnectedMenuClient.ts';
 import { createHttpMenuApiClient } from './httpMenuApiClient.ts';
 
 let client: MenuApiClient | null = null;

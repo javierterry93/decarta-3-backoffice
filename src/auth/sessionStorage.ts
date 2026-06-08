@@ -1,7 +1,4 @@
-import {
-	SESSION_DURATION_MS,
-	SESSION_META_STORAGE_KEY,
-} from './constants.ts';
+import { SESSION_DURATION_MS, SESSION_META_STORAGE_KEY } from './constants.ts';
 
 export type BackofficeSessionMeta = {
 	accessToken: string;
@@ -42,7 +39,9 @@ export function readSessionMeta(): BackofficeSessionMeta | null {
 	}
 }
 
-export function updateSessionToken(accessToken: string): BackofficeSessionMeta | null {
+export function updateSessionToken(
+	accessToken: string,
+): BackofficeSessionMeta | null {
 	const meta = readSessionMeta();
 	if (!meta) return null;
 

@@ -1,8 +1,8 @@
-import type { MenuApiClient } from '../api/menuApiClient.ts';
+import type { MenuRepository } from './MenuRepository.ts';
 
 export interface DatabaseConnection {
 	connect(): Promise<void>;
 	disconnect(): Promise<void>;
 	isConnected(): boolean;
-	getMenuClient(): MenuApiClient;
+	getMenuRepository(): MenuRepository;
 }

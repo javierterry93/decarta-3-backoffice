@@ -30,7 +30,9 @@ export type SupabaseAuthContextValue = {
 	signOut: () => Promise<void>;
 };
 
-const SupabaseAuthContext = createContext<SupabaseAuthContextValue | null>(null);
+const SupabaseAuthContext = createContext<SupabaseAuthContextValue | null>(
+	null,
+);
 
 export function useSupabaseAuth(): SupabaseAuthContextValue | null {
 	return useContext(SupabaseAuthContext);
@@ -74,9 +76,7 @@ function SupabaseAuthGateInner({ children }: SupabaseAuthGateProps) {
 			const resolved = await resolveBackofficeSession();
 			setAuth((current) => {
 				if (current) return current;
-				return resolved
-					? toAuthContext(resolved.session, resolved.meta)
-					: null;
+				return resolved ? toAuthContext(resolved.session, resolved.meta) : null;
 			});
 		} catch {
 			setAuth((current) => {

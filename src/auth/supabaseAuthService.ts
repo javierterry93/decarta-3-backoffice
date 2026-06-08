@@ -80,4 +80,3 @@ export async function resolveBackofficeSession(): Promise<BackofficeAuthSession 
 
 	return reconcileSession(refreshed.session, meta);
 }
-

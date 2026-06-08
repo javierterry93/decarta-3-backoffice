@@ -1,5 +1,6 @@
-import type { MenuApiClient } from '../api/menuApiClient.ts';
-import type { DatabaseConnection } from './DatabaseConnection.ts';
+import type { DatabaseConnection } from '../database/DatabaseConnection.ts';
+import { createMenuService } from './menuService.ts';
+import type { MenuApiClient } from './menuApiClient.ts';
 
 async function withConnection<T>(
 	connection: DatabaseConnection,
@@ -8,7 +9,7 @@ async function withConnection<T>(
 	if (!connection.isConnected()) {
 		await connection.connect();
 	}
-	return fn(connection.getMenuClient());
+	return fn(createMenuService(connection.getMenuRepository()));
 }
 
 export function createConnectedMenuClient(

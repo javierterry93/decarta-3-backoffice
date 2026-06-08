@@ -1,12 +1,8 @@
 -- Esquema Supabase (modo VITE_MENU_API=supabase)
--- Orden de ejecución en SQL Editor:
---   1. schema.sql      — limpieza, tablas, vista business_menu
---   2. schema.rls.sql  — RLS, storage, helpers de seguridad
---   3. schema.rpc.sql  — funciones RPC del backoffice
+-- Ejecutar en SQL Editor: src/database/supabase/schema.sql
 
 -- =============================================================================
--- LIMPIEZA (solo objetos de este archivo: tablas y vista business_menu)
--- RLS/RPC: ver schema.rls.sql y schema.rpc.sql
+-- LIMPIEZA
 -- =============================================================================
 
 drop view if exists public.business_menu cascade;

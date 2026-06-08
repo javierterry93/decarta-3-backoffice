@@ -1,4 +1,9 @@
 import type {
+	BusinessSettingsUpdatePatch,
+	CategoryUpdatePatch,
+	ProductUpdatePatch,
+} from '../../database/MenuRepository.ts';
+import type {
 	BusinessSettings,
 	Category,
 	MenuImage,
@@ -9,7 +14,7 @@ import type {
 	CategoryRow,
 	MenuImageRow,
 	ProductRow,
-} from './types.ts';
+} from '../../database/supabase/types.ts';
 
 export function mapCategoryRow(row: CategoryRow): Category {
 	return {
@@ -117,25 +122,53 @@ export function toMenuImageInsert(
 	};
 }
 
-export function toBusinessUpdate(
-	settings: Partial<BusinessSettings>,
+export function toProductPatch(patch: ProductUpdatePatch): Partial<ProductRow> {
+	return {
+		...(patch.name !== undefined ? { name: patch.name } : {}),
+		...(patch.categoryId !== undefined ? { category_id: patch.categoryId } : {}),
+		...(patch.order !== undefined ? { sort_order: patch.order } : {}),
+		...(patch.price !== undefined ? { price: patch.price } : {}),
+		...(patch.shortDescription !== undefined
+			? { short_description: patch.shortDescription }
+			: {}),
+		...(patch.visible !== undefined ? { visible: patch.visible } : {}),
+		...(patch.imageId !== undefined ? { image_id: patch.imageId } : {}),
+		...(patch.updatedAt !== undefined ? { updated_at: patch.updatedAt } : {}),
+	};
+}
+
+export function toCategoryPatch(
+	patch: CategoryUpdatePatch,
+): Partial<CategoryRow> {
+	return {
+		...(patch.name !== undefined ? { name: patch.name } : {}),
+		...(patch.order !== undefined ? { sort_order: patch.order } : {}),
+		...(patch.visible !== undefined ? { visible: patch.visible } : {}),
+	};
+}
+
+export function toBusinessSettingsPatch(
+	patch: BusinessSettingsUpdatePatch,
 ): Partial<BusinessRow> {
 	return {
-		...(settings.name !== undefined ? { name: settings.name } : {}),
-		...(settings.logoImageId !== undefined
-			? { logo_image_id: settings.logoImageId }
+		...(patch.name !== undefined ? { name: patch.name } : {}),
+		...(patch.logoImageId !== undefined
+			? { logo_image_id: patch.logoImageId }
 			: {}),
-		...(settings.phone !== undefined ? { phone: settings.phone } : {}),
-		...(settings.address !== undefined ? { address: settings.address } : {}),
-		...(settings.hours !== undefined ? { hours: settings.hours } : {}),
-		...(settings.socialInstagram !== undefined
-			? { social_instagram: settings.socialInstagram }
+		...(patch.phone !== undefined ? { phone: patch.phone } : {}),
+		...(patch.address !== undefined ? { address: patch.address } : {}),
+		...(patch.hours !== undefined ? { hours: patch.hours } : {}),
+		...(patch.socialInstagram !== undefined
+			? { social_instagram: patch.socialInstagram }
 			: {}),
-		...(settings.socialFacebook !== undefined
-			? { social_facebook: settings.socialFacebook }
+		...(patch.socialFacebook !== undefined
+			? { social_facebook: patch.socialFacebook }
 			: {}),
-		...(settings.socialTwitter !== undefined
-			? { social_twitter: settings.socialTwitter }
+		...(patch.socialTwitter !== undefined
+			? { social_twitter: patch.socialTwitter }
+			: {}),
+		...(patch.lastModified !== undefined
+			? { last_modified: patch.lastModified }
 			: {}),
 	};
 }

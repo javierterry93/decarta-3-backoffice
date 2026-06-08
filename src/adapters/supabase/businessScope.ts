@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { DatabaseError } from '../DatabaseError.ts';
-import { callSupabaseRpc } from './rpc.ts';
-import type { SupabaseDatabase } from './types.ts';
+import { DatabaseError } from '../../database/DatabaseError.ts';
+import type { SupabaseDatabase } from '../../database/supabase/types.ts';
+import { callSupabaseRpc } from './supabaseRpc.ts';
 
 export async function requireBusinessId(
 	client: SupabaseClient<SupabaseDatabase>,
@@ -12,7 +12,10 @@ export async function requireBusinessId(
 	} = await client.auth.getUser();
 
 	if (authError) {
-		throw new DatabaseError('No se pudo obtener el usuario autenticado', authError);
+		throw new DatabaseError(
+			'No se pudo obtener el usuario autenticado',
+			authError,
+		);
 	}
 
 	if (!user?.id) {
