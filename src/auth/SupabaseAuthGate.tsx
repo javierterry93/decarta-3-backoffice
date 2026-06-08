@@ -18,7 +18,6 @@ import {
 	type BackofficeSessionMeta,
 } from './sessionStorage.ts';
 import {
-	authSessionFromSignIn,
 	resolveBackofficeSession,
 	signOutBackoffice,
 	type BackofficeAuthSession,
@@ -121,7 +120,7 @@ function SupabaseAuthGateInner({ children }: SupabaseAuthGateProps) {
 				return;
 			}
 
-			establishAuth(authSessionFromSignIn(session, meta));
+			establishAuth({ session, meta });
 		});
 
 		const intervalId = window.setInterval(() => {

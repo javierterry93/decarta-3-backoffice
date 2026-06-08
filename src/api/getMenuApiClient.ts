@@ -1,8 +1,6 @@
 import type { MenuApiClient } from './menuApiClient.ts';
-import {
-	connectDatabaseSync,
-	createMenuApiClientFromRepository,
-} from '../database/index.ts';
+import { connectDatabaseSync } from '../database/connectDatabase.ts';
+import { createConnectedMenuClient } from '../database/createConnectedMenuClient.ts';
 import { createHttpMenuApiClient } from './httpMenuApiClient.ts';
 
 let client: MenuApiClient | null = null;
@@ -15,7 +13,7 @@ export function getMenuApiClient(): MenuApiClient {
 		return client;
 	}
 
-	client = createMenuApiClientFromRepository(connectDatabaseSync());
+	client = createConnectedMenuClient(connectDatabaseSync());
 	return client;
 }
 

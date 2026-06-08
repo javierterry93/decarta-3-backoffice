@@ -24,7 +24,7 @@ import {
 } from '../../utils/categoryImport.ts';
 import { generateId } from '../../utils/format.ts';
 import { wrapDatabaseError } from '../DatabaseError.ts';
-import type { MenuRepository } from '../MenuRepository.ts';
+import type { MenuApiClient } from '../../api/menuApiClient.ts';
 import { requireBusinessId } from './businessScope.ts';
 import {
 	mapBusinessRow,
@@ -53,7 +53,7 @@ function nextOrderInCategory(products: Product[], categoryId: string): number {
 	);
 }
 
-export class SupabaseMenuRepository implements MenuRepository {
+export class SupabaseMenuRepository implements MenuApiClient {
 	constructor(
 		private readonly client: SupabaseClient<SupabaseDatabase>,
 		private readonly storageBucket: string,
@@ -105,7 +105,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return { products, categories, images, settings, lastModified };
 	}
 
-	async listProducts(): Promise<Product[]> {
+	private async listProducts(): Promise<Product[]> {
 		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.products)
@@ -120,7 +120,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return (data ?? []).map((row) => mapProductRow(row));
 	}
 
-	async getProduct(id: string): Promise<Product> {
+	private async getProduct(id: string): Promise<Product> {
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.products)
 			.select('*')
@@ -299,7 +299,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return { importedCount: items.length, lastModified };
 	}
 
-	async listCategories(): Promise<Category[]> {
+	private async listCategories(): Promise<Category[]> {
 		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.categories)
@@ -312,22 +312,6 @@ export class SupabaseMenuRepository implements MenuRepository {
 		}
 
 		return (data ?? []).map(mapCategoryRow);
-	}
-
-	async getCategory(id: string): Promise<Category> {
-		const businessId = await requireBusinessId(this.client);
-		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.categories)
-			.select('*')
-			.eq('business_id', businessId)
-			.eq('id', id)
-			.single();
-
-		if (error) {
-			throw wrapDatabaseError(`Categoría no encontrada: ${id}`, error);
-		}
-
-		return mapCategoryRow(data);
 	}
 
 	async createCategory(input: CategoryCreateInput) {
@@ -411,7 +395,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return this.createCategory({ name: formatted });
 	}
 
-	async listImages(): Promise<MenuImage[]> {
+	private async listImages(): Promise<MenuImage[]> {
 		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
@@ -424,22 +408,6 @@ export class SupabaseMenuRepository implements MenuRepository {
 		}
 
 		return (data ?? []).map(mapMenuImageRow);
-	}
-
-	async getImage(id: string): Promise<MenuImage> {
-		const businessId = await requireBusinessId(this.client);
-		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.images)
-			.select('*')
-			.eq('business_id', businessId)
-			.eq('id', id)
-			.single();
-
-		if (error) {
-			throw wrapDatabaseError(`Imagen no encontrada: ${id}`, error);
-		}
-
-		return mapMenuImageRow(data);
 	}
 
 	async createImage(input: ImageCreateInput): Promise<MenuImage> {
@@ -521,7 +489,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		);
 	}
 
-	async getSettings(): Promise<BusinessSettings> {
+	private async getSettings(): Promise<BusinessSettings> {
 		const businessId = await requireBusinessId(this.client);
 
 		const { data, error } = await this.client

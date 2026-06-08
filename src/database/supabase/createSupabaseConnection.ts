@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DatabaseConnection } from '../DatabaseConnection.ts';
 import { wrapDatabaseError } from '../DatabaseError.ts';
-import type { MenuRepository } from '../MenuRepository.ts';
+import type { MenuApiClient } from '../../api/menuApiClient.ts';
 import { SupabaseMenuRepository } from './SupabaseMenuRepository.ts';
 import type { SupabaseDatabase } from './types.ts';
 import { SUPABASE_TABLES } from './types.ts';
@@ -50,7 +50,7 @@ class SupabaseConnection implements DatabaseConnection {
 		return this.connected;
 	}
 
-	getMenuRepository(): MenuRepository {
+	getMenuClient(): MenuApiClient {
 		return this.repository;
 	}
 }

@@ -81,9 +81,3 @@ export async function resolveBackofficeSession(): Promise<BackofficeAuthSession 
 	return reconcileSession(refreshed.session, meta);
 }
 
-export function authSessionFromSignIn(
-	session: Session,
-	meta: BackofficeSessionMeta,
-): BackofficeAuthSession {
-	return { session, meta };
-}

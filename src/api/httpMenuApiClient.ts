@@ -46,8 +46,6 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 	return {
 		getMenu: () => request(baseUrl, apiRoutes.menu),
 
-		listProducts: () => request(baseUrl, apiRoutes.products),
-		getProduct: (id) => request(baseUrl, apiRoutes.product(id)),
 		createProduct: (input) =>
 			request(baseUrl, apiRoutes.products, {
 				method: 'POST',
@@ -78,8 +76,6 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 				body: JSON.stringify({ items }),
 			}),
 
-		listCategories: () => request(baseUrl, apiRoutes.categories),
-		getCategory: (id) => request(baseUrl, apiRoutes.category(id)),
 		createCategory: (input) =>
 			request(baseUrl, apiRoutes.categories, {
 				method: 'POST',
@@ -103,8 +99,6 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 				body: JSON.stringify(input),
 			}),
 
-		listImages: () => request(baseUrl, apiRoutes.images),
-		getImage: (id) => request(baseUrl, apiRoutes.image(id)),
 		createImage: (input) =>
 			request(baseUrl, apiRoutes.images, {
 				method: 'POST',
@@ -113,7 +107,6 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 		deleteImage: (id) =>
 			request(baseUrl, apiRoutes.image(id), { method: 'DELETE' }),
 
-		getSettings: () => request(baseUrl, apiRoutes.settings),
 		updateSettings: (input) =>
 			request(baseUrl, apiRoutes.settings, {
 				method: 'PATCH',

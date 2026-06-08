@@ -61,10 +61,3 @@ export function isSessionMetaExpired(
 ): boolean {
 	return now >= meta.expiresAt;
 }
-
-export function getSessionRemainingMs(
-	meta: BackofficeSessionMeta,
-	now = Date.now(),
-): number {
-	return Math.max(0, meta.expiresAt - now);
-}

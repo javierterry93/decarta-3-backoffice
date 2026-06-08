@@ -16,11 +16,11 @@ import {
 } from '../components/ui/Card.tsx';
 import { MenuImportExportSection } from '../components/forms/MenuImportExportSection.tsx';
 import { ResetMenuDialog } from '../components/dialogs/ResetMenuDialog.tsx';
-import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
 import type {
 	BusinessSettings,
 	Category,
 	ExcelColumnMapping,
+	MenuImage,
 	Product,
 } from '../types/index.ts';
 
@@ -41,6 +41,7 @@ type SettingsForm = z.infer<typeof settingsSchema>;
 type SettingsLayoutProps = {
 	settings: BusinessSettings;
 	categories: Category[];
+	images: MenuImage[];
 	onSaveSettings: (data: SettingsForm) => void;
 	onUploadImage: (file: File) => Promise<string>;
 	onSetLogo: (imageId: string) => void;
@@ -67,19 +68,17 @@ type SettingsLayoutProps = {
 };
 
 function LogoPreview({
-	logoImageId,
+	logoImage,
 	onRemove,
 }: {
-	logoImageId: string;
+	logoImage: MenuImage;
 	onRemove: () => void;
 }) {
-	const logoUrl = useImageObjectUrl(logoImageId, 'full');
-
 	return (
 		<div className="flex items-center gap-4">
-			{logoUrl ? (
+			{logoImage.url ? (
 				<img
-					src={logoUrl}
+					src={logoImage.url}
 					alt="Logo"
 					className="h-16 w-16 rounded-full object-cover"
 				/>
@@ -98,6 +97,7 @@ function LogoPreview({
 export function SettingsLayout({
 	settings,
 	categories,
+	images,
 	onSaveSettings,
 	onUploadImage,
 	onSetLogo,
@@ -113,6 +113,9 @@ export function SettingsLayout({
 	onSignOut,
 	sessionExpiresAt,
 }: SettingsLayoutProps) {
+	const logoImage = settings.logoImageId
+		? images.find((i) => i.id === settings.logoImageId)
+		: undefined;
 	const [resetOpen, setResetOpen] = useState(false);
 	const [isResetting, setIsResetting] = useState(false);
 	const {
@@ -178,9 +181,9 @@ export function SettingsLayout({
 
 							<div className="space-y-2">
 								<Label>Logo</Label>
-								{settings.logoImageId ? (
+								{logoImage ? (
 									<LogoPreview
-										logoImageId={settings.logoImageId}
+										logoImage={logoImage}
 										onRemove={() => {
 											onRemoveLogo();
 											onNotify('Logo eliminado');

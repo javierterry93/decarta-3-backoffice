@@ -4,7 +4,7 @@ import {
 	PageError,
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
-import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import { toast } from 'sonner';
 import { useMenu, useMenuMutations } from '../../hooks/useMenu.ts';
 import { useImageThumbnailMap } from '../../hooks/useImageUrls.ts';
 import { ProductsLayout } from '../../layouts/ProductsLayout.tsx';
@@ -12,7 +12,10 @@ import { ProductsLayout } from '../../layouts/ProductsLayout.tsx';
 export default function ProductsPage() {
 	const { data: menu, isLoading, error } = useMenu();
 	const mutations = useMenuMutations();
-	const showToast = useAutoSaveToast();
+	const showToast = useCallback(
+		(message: string) => toast.success(message, { duration: 3000 }),
+		[],
+	);
 	const [searchParams] = useSearchParams();
 	const navigate = useNavigate();
 

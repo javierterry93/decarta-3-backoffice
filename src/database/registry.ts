@@ -12,15 +12,6 @@ export function registerDatabaseConnector(
 	cachedConnection = null;
 }
 
-export function resetDatabaseConnector(): void {
-	connectorFactory = null;
-	cachedConnection = null;
-}
-
-export function hasDatabaseConnector(): boolean {
-	return connectorFactory !== null;
-}
-
 export function createDatabaseConnection(): DatabaseConnection {
 	if (!connectorFactory) {
 		throw new DatabaseError(

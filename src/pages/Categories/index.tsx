@@ -3,7 +3,7 @@ import {
 	PageError,
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
-import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import { toast } from 'sonner';
 import { useMenu, useMenuMutations } from '../../hooks/useMenu.ts';
 import type { CategoryEditDraft } from '../../layouts/CategoryEditLayout.tsx';
 import { CategoriesLayout } from '../../layouts/CategoriesLayout.tsx';
@@ -11,7 +11,10 @@ import { CategoriesLayout } from '../../layouts/CategoriesLayout.tsx';
 export default function CategoriesPage() {
 	const { data: menu, isLoading, error } = useMenu();
 	const mutations = useMenuMutations();
-	const showToast = useAutoSaveToast();
+	const showToast = useCallback(
+		(message: string) => toast.success(message, { duration: 3000 }),
+		[],
+	);
 
 	const handleAddCategory = useCallback(
 		async (data: CategoryEditDraft) => {

@@ -4,7 +4,7 @@ import {
 	PageError,
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
-import { useAutoSaveToast } from '../../hooks/useAutoSaveToast.ts';
+import { toast } from 'sonner';
 import {
 	useMenu,
 	useMenuMutations,
@@ -25,7 +25,10 @@ export default function SettingsPage() {
 	const { data: menu, isLoading, error } = useMenu();
 	const mutations = useMenuMutations();
 	const uploadImageMutation = useUploadImage();
-	const showToast = useAutoSaveToast();
+	const showToast = useCallback(
+		(message: string) => toast.success(message, { duration: 3000 }),
+		[],
+	);
 	const supabaseAuth = useSupabaseAuth();
 
 	const handleSaveSettings = useCallback(
@@ -88,6 +91,7 @@ export default function SettingsPage() {
 		<SettingsLayout
 			settings={menu.settings}
 			categories={menu.categories}
+			images={menu.images}
 			onSaveSettings={handleSaveSettings}
 			onUploadImage={handleUploadImage}
 			onSetLogo={handleSetLogo}
