@@ -26,6 +26,8 @@ export function createMenuApiClientFromRepository(
 			withConnection(connection, (repo) => repo.updateProduct(id, input)),
 		deleteProduct: (id) =>
 			withConnection(connection, (repo) => repo.deleteProduct(id)),
+		deleteProducts: (input) =>
+			withConnection(connection, (repo) => repo.deleteProducts(input)),
 		duplicateProduct: (id) =>
 			withConnection(connection, (repo) => repo.duplicateProduct(id)),
 		reorderProducts: (input) =>

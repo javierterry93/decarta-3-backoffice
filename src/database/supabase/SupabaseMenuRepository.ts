@@ -6,6 +6,7 @@ import type {
 	CategoryResolveInput,
 	CategoryUpdateInput,
 	ImageCreateInput,
+	ProductBulkDeleteInput,
 	ProductCreateInput,
 	ProductImportItem,
 	ProductReorderInput,
@@ -24,31 +25,20 @@ import {
 import { generateId } from '../../utils/format.ts';
 import { wrapDatabaseError } from '../DatabaseError.ts';
 import type { MenuRepository } from '../MenuRepository.ts';
+import { requireBusinessId } from './businessScope.ts';
 import {
-	mapBusinessSettingsRow,
+	mapBusinessRow,
 	mapCategoryRow,
 	mapMenuImageRow,
 	mapProductRow,
-	toBusinessSettingsUpdate,
+	toBusinessUpdate,
 	toCategoryInsert,
 	toMenuImageInsert,
 	toProductInsert,
 } from './mappers.ts';
-import type { BusinessSettingsRow, SupabaseDatabase } from './types.ts';
+import { callSupabaseRpc } from './rpc.ts';
+import type { BusinessRow, SupabaseDatabase } from './types.ts';
 import { SUPABASE_TABLES } from './types.ts';
-
-const SETTINGS_ROW_ID = 1;
-
-const defaultSettings: BusinessSettings = {
-	name: 'Mi Restaurante',
-	logoImageId: null,
-	phone: '',
-	address: '',
-	hours: 'Lun–Dom: 12:00–23:00',
-	socialInstagram: '',
-	socialFacebook: '',
-	socialTwitter: '',
-};
 
 function now(): string {
 	return new Date().toISOString();
@@ -73,12 +63,12 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return this.client;
 	}
 
-	private async touchLastModified(): Promise<string> {
+	private async touchLastModified(businessId: string): Promise<string> {
 		const timestamp = now();
 		const { error } = await this.client
-			.from(SUPABASE_TABLES.settings)
+			.from(SUPABASE_TABLES.businesses)
 			.update({ last_modified: timestamp })
-			.eq('id', SETTINGS_ROW_ID);
+			.eq('id', businessId);
 
 		if (error) {
 			throw wrapDatabaseError('No se pudo actualizar lastModified', error);
@@ -87,11 +77,11 @@ export class SupabaseMenuRepository implements MenuRepository {
 		return timestamp;
 	}
 
-	private async fetchLastModified(): Promise<string> {
+	private async fetchLastModified(businessId: string): Promise<string> {
 		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.settings)
+			.from(SUPABASE_TABLES.businesses)
 			.select('last_modified')
-			.eq('id', SETTINGS_ROW_ID)
+			.eq('id', businessId)
 			.maybeSingle();
 
 		if (error) {
@@ -102,29 +92,32 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async getMenu() {
+		const businessId = await requireBusinessId(this.client);
 		const [products, categories, images, settings, lastModified] =
 			await Promise.all([
 				this.listProducts(),
 				this.listCategories(),
 				this.listImages(),
 				this.getSettings(),
-				this.fetchLastModified(),
+				this.fetchLastModified(businessId),
 			]);
 
 		return { products, categories, images, settings, lastModified };
 	}
 
 	async listProducts(): Promise<Product[]> {
+		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.products)
-			.select('*')
+			.select('*, categories!inner(business_id)')
+			.eq('categories.business_id', businessId)
 			.order('sort_order', { ascending: true });
 
 		if (error) {
 			throw wrapDatabaseError('No se pudieron listar productos', error);
 		}
 
-		return (data ?? []).map(mapProductRow);
+		return (data ?? []).map((row) => mapProductRow(row));
 	}
 
 	async getProduct(id: string): Promise<Product> {
@@ -142,6 +135,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async createProduct(input: ProductCreateInput) {
+		const businessId = await requireBusinessId(this.client);
 		const categories = await this.listCategories();
 		const products = await this.listProducts();
 		const id = generateId();
@@ -169,11 +163,12 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo crear el producto', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return { id };
 	}
 
 	async updateProduct(id: string, input: ProductUpdateInput): Promise<Product> {
+		const businessId = await requireBusinessId(this.client);
 		const current = await this.getProduct(id);
 		const timestamp = now();
 		let nextOrder = input.order ?? current.order;
@@ -209,24 +204,27 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo actualizar el producto', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return mapProductRow(data);
 	}
 
 	async deleteProduct(id: string): Promise<void> {
-		const { error } = await this.client
-			.from(SUPABASE_TABLES.products)
-			.delete()
-			.eq('id', id);
+		await this.deleteProducts({ ids: [id] });
+	}
 
-		if (error) {
-			throw wrapDatabaseError('No se pudo eliminar el producto', error);
-		}
+	async deleteProducts({ ids }: ProductBulkDeleteInput): Promise<void> {
+		if (ids.length === 0) return;
 
-		await this.touchLastModified();
+		await callSupabaseRpc(
+			this.client,
+			'delete_products',
+			{ p_ids: ids },
+			'No se pudieron eliminar productos',
+		);
 	}
 
 	async duplicateProduct(id: string) {
+		const businessId = await requireBusinessId(this.client);
 		const source = await this.getProduct(id);
 		const products = await this.listProducts();
 		const newId = generateId();
@@ -249,7 +247,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo duplicar el producto', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return { id: newId };
 	}
 
@@ -257,22 +255,18 @@ export class SupabaseMenuRepository implements MenuRepository {
 		categoryId,
 		orderedIds,
 	}: ProductReorderInput): Promise<void> {
-		const timestamp = now();
+		if (orderedIds.length === 0) return;
 
-		await Promise.all(
-			orderedIds.map((productId, index) =>
-				this.client
-					.from(SUPABASE_TABLES.products)
-					.update({ sort_order: index + 1, updated_at: timestamp })
-					.eq('id', productId)
-					.eq('category_id', categoryId),
-			),
+		await callSupabaseRpc(
+			this.client,
+			'reorder_products',
+			{ p_category_id: categoryId, p_ordered_ids: orderedIds },
+			'No se pudo reordenar productos',
 		);
-
-		await this.touchLastModified();
 	}
 
 	async importProducts(items: ProductImportItem[]) {
+		const businessId = await requireBusinessId(this.client);
 		const timestamp = now();
 		const runningProducts = await this.listProducts();
 		const rows = items.map((item) => {
@@ -288,23 +282,29 @@ export class SupabaseMenuRepository implements MenuRepository {
 			return toProductInsert(product);
 		});
 
-		if (rows.length > 0) {
-			const { error } = await this.client
-				.from(SUPABASE_TABLES.products)
-				.insert(rows);
-			if (error) {
-				throw wrapDatabaseError('No se pudieron importar productos', error);
-			}
+		if (rows.length === 0) {
+			return {
+				importedCount: 0,
+				lastModified: await this.fetchLastModified(businessId),
+			};
 		}
 
-		const lastModified = await this.touchLastModified();
+		const lastModified = await callSupabaseRpc<string>(
+			this.client,
+			'import_products',
+			{ p_rows: rows },
+			'No se pudieron importar productos',
+		);
+
 		return { importedCount: items.length, lastModified };
 	}
 
 	async listCategories(): Promise<Category[]> {
+		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.categories)
 			.select('*')
+			.eq('business_id', businessId)
 			.order('sort_order', { ascending: true });
 
 		if (error) {
@@ -315,9 +315,11 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async getCategory(id: string): Promise<Category> {
+		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.categories)
 			.select('*')
+			.eq('business_id', businessId)
 			.eq('id', id)
 			.single();
 
@@ -329,6 +331,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async createCategory(input: CategoryCreateInput) {
+		const businessId = await requireBusinessId(this.client);
 		const categories = await this.listCategories();
 		const id = generateId();
 		const category: Category = {
@@ -340,13 +343,13 @@ export class SupabaseMenuRepository implements MenuRepository {
 
 		const { error } = await this.client
 			.from(SUPABASE_TABLES.categories)
-			.insert(toCategoryInsert(category));
+			.insert(toCategoryInsert(category, businessId));
 
 		if (error) {
 			throw wrapDatabaseError('No se pudo crear la categoría', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return { id };
 	}
 
@@ -354,6 +357,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		id: string,
 		input: CategoryUpdateInput,
 	): Promise<Category> {
+		const businessId = await requireBusinessId(this.client);
 		const patch = {
 			...(input.name !== undefined ? { name: input.name } : {}),
 			...(input.order !== undefined ? { sort_order: input.order } : {}),
@@ -363,6 +367,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.categories)
 			.update(patch)
+			.eq('business_id', businessId)
 			.eq('id', id)
 			.select('*')
 			.single();
@@ -371,51 +376,28 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo actualizar la categoría', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return mapCategoryRow(data);
 	}
 
 	async deleteCategory(id: string): Promise<void> {
-		const categories = await this.listCategories();
-		const fallbackCategoryId = categories.find((c) => c.id !== id)?.id ?? '';
-
-		if (fallbackCategoryId) {
-			const { error: reassignError } = await this.client
-				.from(SUPABASE_TABLES.products)
-				.update({ category_id: fallbackCategoryId, updated_at: now() })
-				.eq('category_id', id);
-
-			if (reassignError) {
-				throw wrapDatabaseError(
-					'No se pudieron reasignar productos',
-					reassignError,
-				);
-			}
-		}
-
-		const { error } = await this.client
-			.from(SUPABASE_TABLES.categories)
-			.delete()
-			.eq('id', id);
-
-		if (error) {
-			throw wrapDatabaseError('No se pudo eliminar la categoría', error);
-		}
-
-		await this.touchLastModified();
+		await callSupabaseRpc(
+			this.client,
+			'delete_category',
+			{ p_id: id },
+			'No se pudo eliminar la categoría',
+		);
 	}
 
 	async reorderCategories({ orderedIds }: CategoryReorderInput): Promise<void> {
-		await Promise.all(
-			orderedIds.map((categoryId, index) =>
-				this.client
-					.from(SUPABASE_TABLES.categories)
-					.update({ sort_order: index + 1 })
-					.eq('id', categoryId),
-			),
-		);
+		if (orderedIds.length === 0) return;
 
-		await this.touchLastModified();
+		await callSupabaseRpc(
+			this.client,
+			'reorder_categories',
+			{ p_ordered_ids: orderedIds },
+			'No se pudo reordenar categorías',
+		);
 	}
 
 	async resolveCategoryId({ name = '' }: CategoryResolveInput) {
@@ -430,9 +412,11 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async listImages(): Promise<MenuImage[]> {
+		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
 			.select('*')
+			.eq('business_id', businessId)
 			.order('created_at', { ascending: false });
 
 		if (error) {
@@ -443,9 +427,11 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async getImage(id: string): Promise<MenuImage> {
+		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
 			.select('*')
+			.eq('business_id', businessId)
 			.eq('id', id)
 			.single();
 
@@ -457,6 +443,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async createImage(input: ImageCreateInput): Promise<MenuImage> {
+		const businessId = await requireBusinessId(this.client);
 		const id = generateId();
 		const timestamp = now();
 		let url = input.url;
@@ -489,17 +476,20 @@ export class SupabaseMenuRepository implements MenuRepository {
 				.getPublicUrl(thumbPath).data.publicUrl;
 		}
 
-		const row = toMenuImageInsert({
-			id,
-			name: input.name,
-			createdAt: timestamp,
-			url,
-			thumbnailUrl,
-		});
-
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
-			.insert(row)
+			.insert(
+				toMenuImageInsert(
+					{
+						id,
+						name: input.name,
+						createdAt: timestamp,
+						url,
+						thumbnailUrl,
+					},
+					businessId,
+				),
+			)
 			.select('*')
 			.single();
 
@@ -507,67 +497,60 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo crear la imagen', error);
 		}
 
-		await this.touchLastModified();
+		await this.touchLastModified(businessId);
 		return mapMenuImageRow(data);
 	}
 
 	async deleteImage(id: string): Promise<void> {
-		await this.client.storage
+		const { error: storageError } = await this.client.storage
 			.from(this.storageBucket)
 			.remove([`${id}/full`, `${id}/thumb`]);
 
-		const { error: clearProductsError } = await this.client
-			.from(SUPABASE_TABLES.products)
-			.update({ image_id: null, updated_at: now() })
-			.eq('image_id', id);
-
-		if (clearProductsError) {
+		if (storageError) {
 			throw wrapDatabaseError(
-				'No se pudo desvincular la imagen de productos',
-				clearProductsError,
+				'No se pudieron eliminar los archivos de la imagen',
+				storageError,
 			);
 		}
 
-		const { error } = await this.client
-			.from(SUPABASE_TABLES.images)
-			.delete()
-			.eq('id', id);
-
-		if (error) {
-			throw wrapDatabaseError('No se pudo eliminar la imagen', error);
-		}
-
-		await this.touchLastModified();
+		await callSupabaseRpc(
+			this.client,
+			'delete_menu_image',
+			{ p_id: id },
+			'No se pudo eliminar la imagen',
+		);
 	}
 
 	async getSettings(): Promise<BusinessSettings> {
+		const businessId = await requireBusinessId(this.client);
+
 		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.settings)
+			.from(SUPABASE_TABLES.businesses)
 			.select('*')
-			.eq('id', SETTINGS_ROW_ID)
-			.maybeSingle();
+			.eq('id', businessId)
+			.single();
 
 		if (error) {
 			throw wrapDatabaseError('No se pudieron leer los ajustes', error);
 		}
 
-		if (!data) return { ...defaultSettings };
-		return mapBusinessSettingsRow(data as BusinessSettingsRow);
+		return mapBusinessRow(data as BusinessRow);
 	}
 
 	async updateSettings(
 		input: BusinessSettingsUpdateInput,
 	): Promise<BusinessSettings> {
+		const businessId = await requireBusinessId(this.client);
 		const timestamp = now();
 		const patch = {
-			...toBusinessSettingsUpdate(input),
+			...toBusinessUpdate(input),
 			last_modified: timestamp,
 		};
 
 		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.settings)
+			.from(SUPABASE_TABLES.businesses)
 			.update(patch)
-			.eq('id', SETTINGS_ROW_ID)
+			.eq('id', businessId)
 			.select('*')
 			.single();
 
@@ -575,74 +558,34 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudieron actualizar los ajustes', error);
 		}
 
-		return mapBusinessSettingsRow(data);
+		return mapBusinessRow(data);
 	}
 
 	async resetMenu(): Promise<void> {
-		const [products, images, categories] = await Promise.all([
-			this.listProducts(),
-			this.listImages(),
-			this.listCategories(),
-		]);
-
-		if (products.length > 0) {
-			const { error } = await this.client
-				.from(SUPABASE_TABLES.products)
-				.delete()
-				.in(
-					'id',
-					products.map((product) => product.id),
-				);
-			if (error) {
-				throw wrapDatabaseError('No se pudieron eliminar productos', error);
-			}
-		}
+		const images = await this.listImages();
 
 		if (images.length > 0) {
-			await Promise.all(
-				images.map((image) =>
-					this.client.storage
-						.from(this.storageBucket)
-						.remove([`${image.id}/full`, `${image.id}/thumb`]),
-				),
-			);
+			const storagePaths = images.flatMap((image) => [
+				`${image.id}/full`,
+				`${image.id}/thumb`,
+			]);
+			const { error: storageError } = await this.client.storage
+				.from(this.storageBucket)
+				.remove(storagePaths);
 
-			const { error } = await this.client
-				.from(SUPABASE_TABLES.images)
-				.delete()
-				.in(
-					'id',
-					images.map((image) => image.id),
+			if (storageError) {
+				throw wrapDatabaseError(
+					'No se pudieron eliminar los archivos de imágenes',
+					storageError,
 				);
-			if (error) {
-				throw wrapDatabaseError('No se pudieron eliminar imágenes', error);
 			}
 		}
 
-		if (categories.length > 0) {
-			const { error } = await this.client
-				.from(SUPABASE_TABLES.categories)
-				.delete()
-				.in(
-					'id',
-					categories.map((category) => category.id),
-				);
-			if (error) {
-				throw wrapDatabaseError('No se pudieron eliminar categorías', error);
-			}
-		}
-
-		const { error } = await this.client
-			.from(SUPABASE_TABLES.settings)
-			.update({
-				...toBusinessSettingsUpdate(defaultSettings),
-				logo_image_id: null,
-				last_modified: now(),
-			})
-			.eq('id', SETTINGS_ROW_ID);
-
-		if (error) {
-			throw wrapDatabaseError('No se pudo restablecer la carta', error);
-		}
+		await callSupabaseRpc(
+			this.client,
+			'reset_menu',
+			{},
+			'No se pudo restablecer la carta',
+		);
 	}
 }

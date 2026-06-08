@@ -60,6 +60,11 @@ export function createHttpMenuApiClient(baseUrl: string): MenuApiClient {
 			}),
 		deleteProduct: (id) =>
 			request(baseUrl, apiRoutes.product(id), { method: 'DELETE' }),
+		deleteProducts: async ({ ids }) => {
+			for (const id of ids) {
+				await request(baseUrl, apiRoutes.product(id), { method: 'DELETE' });
+			}
+		},
 		duplicateProduct: (id) =>
 			request(baseUrl, apiRoutes.productDuplicate(id), { method: 'POST' }),
 		reorderProducts: (input) =>

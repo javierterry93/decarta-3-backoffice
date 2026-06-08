@@ -1,6 +1,7 @@
-import { Menu, X } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useSupabaseAuth } from '../../auth/SupabaseAuthGate.tsx';
 import { cn } from '../../utils/cn.ts';
 import { Button } from '../ui/Button.tsx';
 import { navItems, getPageTitle } from './navItems.ts';
@@ -23,6 +24,33 @@ function useDrawerTransition(open: boolean) {
 	}, [open]);
 
 	return { mounted, visible };
+}
+
+function LogoutButton({
+	className,
+	onAfterLogout,
+}: {
+	className?: string;
+	onAfterLogout?: () => void;
+}) {
+	const auth = useSupabaseAuth();
+	if (!auth) return null;
+
+	return (
+		<Button
+			type="button"
+			variant="ghost"
+			className={cn(
+				'w-full justify-start gap-3 text-foreground-muted hover:text-foreground',
+				className,
+			)}
+			onClick={() => {
+				void auth.signOut().then(() => onAfterLogout?.());
+			}}>
+			<LogOut className="h-5 w-5 shrink-0" aria-hidden />
+			Cerrar sesión
+		</Button>
+	);
 }
 
 function Sidebar() {
@@ -50,6 +78,9 @@ function Sidebar() {
 					</NavLink>
 				))}
 			</nav>
+			<div className="border-t border-separator p-3">
+				<LogoutButton />
+			</div>
 		</aside>
 	);
 }
@@ -120,6 +151,12 @@ function MobileNavDrawer({
 						))}
 					</ul>
 				</nav>
+				<div className="shrink-0 border-t border-separator p-3">
+					<LogoutButton
+						className="min-h-12 rounded-xl text-base"
+						onAfterLogout={onClose}
+					/>
+				</div>
 			</aside>
 		</div>
 	);

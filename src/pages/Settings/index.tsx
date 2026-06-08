@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { useSupabaseAuth } from '../../auth/SupabaseAuthGate.tsx';
 import {
 	PageError,
 	PageLoading,
@@ -25,6 +26,7 @@ export default function SettingsPage() {
 	const mutations = useMenuMutations();
 	const uploadImageMutation = useUploadImage();
 	const showToast = useAutoSaveToast();
+	const supabaseAuth = useSupabaseAuth();
 
 	const handleSaveSettings = useCallback(
 		async (data: Parameters<typeof mutations.updateSettings.mutateAsync>[0]) => {
@@ -98,6 +100,8 @@ export default function SettingsPage() {
 			mapRowsToProducts={mapRowsToProducts}
 			onResetMenu={handleResetMenu}
 			onNotify={showToast}
+			onSignOut={supabaseAuth?.signOut}
+			sessionExpiresAt={supabaseAuth?.expiresAt}
 		/>
 	);
 }

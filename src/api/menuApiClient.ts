@@ -13,6 +13,7 @@ import type {
 	EntityIdResponse,
 	ImageCreateInput,
 	MenuSnapshot,
+	ProductBulkDeleteInput,
 	ProductCreateInput,
 	ProductImportItem,
 	ProductImportResponse,
@@ -28,6 +29,7 @@ export interface MenuApiClient {
 	createProduct(input: ProductCreateInput): Promise<EntityIdResponse>;
 	updateProduct(id: string, input: ProductUpdateInput): Promise<Product>;
 	deleteProduct(id: string): Promise<void>;
+	deleteProducts(input: ProductBulkDeleteInput): Promise<void>;
 	duplicateProduct(id: string): Promise<EntityIdResponse>;
 	reorderProducts(input: ProductReorderInput): Promise<void>;
 	importProducts(items: ProductImportItem[]): Promise<ProductImportResponse>;

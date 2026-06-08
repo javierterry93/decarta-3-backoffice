@@ -50,6 +50,10 @@ export type ProductReorderInput = {
 	orderedIds: string[];
 };
 
+export type ProductBulkDeleteInput = {
+	ids: string[];
+};
+
 export type CategoryCreateInput = {
 	name?: string;
 };

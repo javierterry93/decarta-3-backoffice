@@ -35,10 +35,10 @@ export default function ProductsPage() {
 
 	const handleDeleteProducts = useCallback(
 		async (ids: string[]) => {
-			await Promise.all(ids.map((id) => mutations.deleteProduct.mutateAsync(id)));
+			await mutations.deleteProducts.mutateAsync({ ids });
 			showToast(`${ids.length} productos eliminados`);
 		},
-		[mutations.deleteProduct, showToast],
+		[mutations.deleteProducts, showToast],
 	);
 
 	if (isLoading) return <PageLoading />;

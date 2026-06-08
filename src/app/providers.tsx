@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Toaster } from 'sonner';
+import { SupabaseAuthGate } from '../auth/SupabaseAuthGate.tsx';
 import { migrateLegacyImagesIfNeeded } from '../services/imageStorage/imageResolver.ts';
 
 const queryClient = new QueryClient({
@@ -23,7 +24,7 @@ export function AppProviders({ children }: AppProvidersProps) {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			{children}
+			<SupabaseAuthGate>{children}</SupabaseAuthGate>
 			<Toaster
 				position="bottom-center"
 				toastOptions={{

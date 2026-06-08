@@ -62,6 +62,8 @@ type SettingsLayoutProps = {
 	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
 	onResetMenu: () => Promise<void>;
 	onNotify: (message: string) => void;
+	onSignOut?: () => Promise<void>;
+	sessionExpiresAt?: number;
 };
 
 function LogoPreview({
@@ -108,6 +110,8 @@ export function SettingsLayout({
 	mapRowsToProducts,
 	onResetMenu,
 	onNotify,
+	onSignOut,
+	sessionExpiresAt,
 }: SettingsLayoutProps) {
 	const [resetOpen, setResetOpen] = useState(false);
 	const [isResetting, setIsResetting] = useState(false);
@@ -257,6 +261,22 @@ export function SettingsLayout({
 					mapRowsToProducts={mapRowsToProducts}
 					onNotify={onNotify}
 				/>
+
+				{onSignOut && (
+					<Card>
+						<CardHeader>
+							<CardTitle>Sesión</CardTitle>
+							<CardDescription>
+								{sessionExpiresAt
+									? `Expira a las ${new Date(sessionExpiresAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+									: 'Cuenta del backoffice'}
+							</CardDescription>
+						</CardHeader>
+						<Button type="button" variant="outline" onClick={() => void onSignOut()}>
+							Cerrar sesión
+						</Button>
+					</Card>
+				)}
 
 				<Card className="border-accent-orange/20">
 					<CardHeader>

@@ -5,7 +5,7 @@ import type {
 	Product,
 } from '../../types/index.ts';
 import type {
-	BusinessSettingsRow,
+	BusinessRow,
 	CategoryRow,
 	MenuImageRow,
 	ProductRow,
@@ -45,9 +45,7 @@ export function mapMenuImageRow(row: MenuImageRow): MenuImage {
 	};
 }
 
-export function mapBusinessSettingsRow(
-	row: BusinessSettingsRow,
-): BusinessSettings {
+export function mapBusinessRow(row: BusinessRow): BusinessSettings {
 	return {
 		name: row.name,
 		logoImageId: row.logo_image_id,
@@ -62,9 +60,11 @@ export function mapBusinessSettingsRow(
 
 export function toCategoryInsert(
 	category: Pick<Category, 'id' | 'name' | 'order' | 'visible'>,
+	businessId: string,
 ): CategoryRow {
 	return {
 		id: category.id,
+		business_id: businessId,
 		name: category.name,
 		sort_order: category.order,
 		visible: category.visible,
@@ -105,9 +105,11 @@ export function toMenuImageInsert(
 		url?: string;
 		thumbnailUrl?: string;
 	},
+	businessId: string,
 ): MenuImageRow {
 	return {
 		id: image.id,
+		business_id: businessId,
 		name: image.name,
 		url: image.url ?? null,
 		thumbnail_url: image.thumbnailUrl ?? null,
@@ -115,9 +117,9 @@ export function toMenuImageInsert(
 	};
 }
 
-export function toBusinessSettingsUpdate(
+export function toBusinessUpdate(
 	settings: Partial<BusinessSettings>,
-): Partial<BusinessSettingsRow> {
+): Partial<BusinessRow> {
 	return {
 		...(settings.name !== undefined ? { name: settings.name } : {}),
 		...(settings.logoImageId !== undefined

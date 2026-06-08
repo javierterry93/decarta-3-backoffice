@@ -26,6 +26,7 @@ export const menuService = {
 	duplicateProduct: async (id: string) =>
 		(await client().duplicateProduct(id)).id,
 	deleteProduct: (id: string) => client().deleteProduct(id),
+	deleteProducts: (ids: string[]) => client().deleteProducts({ ids }),
 	reorderProducts: (categoryId: string, orderedIds: string[]) =>
 		client().reorderProducts({ categoryId, orderedIds }),
 

@@ -30,10 +30,9 @@ class SupabaseConnection implements DatabaseConnection {
 
 		const { error } = await this.repository
 			.getClient()
-			.from(SUPABASE_TABLES.settings)
+			.from(SUPABASE_TABLES.categories)
 			.select('id')
-			.limit(1)
-			.maybeSingle();
+			.limit(1);
 
 		if (error) {
 			throw wrapDatabaseError('No se pudo conectar con la base de datos', error);

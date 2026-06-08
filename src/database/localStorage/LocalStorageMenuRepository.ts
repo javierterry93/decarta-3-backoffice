@@ -16,6 +16,7 @@ import type {
 	CategoryResolveInput,
 	CategoryUpdateInput,
 	ImageCreateInput,
+	ProductBulkDeleteInput,
 	ProductCreateInput,
 	ProductImportItem,
 	ProductReorderInput,
@@ -58,6 +59,13 @@ export class LocalStorageMenuRepository implements MenuRepository {
 
 	deleteProduct(id: string) {
 		store().deleteProduct(id);
+		return Promise.resolve();
+	}
+
+	deleteProducts({ ids }: ProductBulkDeleteInput) {
+		for (const id of ids) {
+			store().deleteProduct(id);
+		}
 		return Promise.resolve();
 	}
 
