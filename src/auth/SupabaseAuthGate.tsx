@@ -6,7 +6,6 @@ import {
 	useEffect,
 	useState,
 } from 'react';
-import { resolveMenuApiMode } from '../config/menuApiMode.ts';
 import { PageLoading } from '../components/layout/PageLoading.tsx';
 import { getSupabaseClient } from '../database/supabase/supabaseClient.ts';
 import LoginPage from '../pages/Login/index.tsx';
@@ -149,7 +148,7 @@ function SupabaseAuthGateInner({ children }: SupabaseAuthGateProps) {
 }
 
 export function SupabaseAuthGate({ children }: SupabaseAuthGateProps) {
-	if (resolveMenuApiMode() !== 'supabase') {
+	if ((import.meta.env.VITE_MENU_API ?? 'supabase') !== 'supabase') {
 		return children;
 	}
 

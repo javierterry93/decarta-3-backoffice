@@ -83,5 +83,3 @@ export type BusinessSettingsUpdateInput = Partial<BusinessSettings>;
 export type EntityIdResponse = {
 	id: string;
 };
-
-export type { MenuApiMode } from '../config/menuApiMode.ts';

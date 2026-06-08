@@ -2,7 +2,6 @@ export { menuService } from './menuService.ts';
 export { uploadImage, uploadImages } from './imageService.ts';
 export {
 	getMenuApiClient,
-	getMenuApiMode,
 	MenuApiError,
 	menuQueryKey,
 	type MenuApiClient,

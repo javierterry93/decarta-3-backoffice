@@ -1,4 +1,4 @@
-import { getMenuApiClient, getMenuApiMode } from '../api/getMenuApiClient.ts';
+import { getMenuApiClient } from '../api/getMenuApiClient.ts';
 import { blobToDataUrl, optimizeImage } from '../utils/imageOptimizer.ts';
 
 export async function uploadImage(file: File): Promise<string> {
@@ -6,7 +6,7 @@ export async function uploadImage(file: File): Promise<string> {
 	const name = file.name.replace(/\.[^.]+$/, '') || 'Imagen';
 	const client = getMenuApiClient();
 
-	if (getMenuApiMode() === 'remote') {
+	if (import.meta.env.VITE_MENU_API === 'remote') {
 		const [url, thumbnailUrl] = await Promise.all([
 			blobToDataUrl(blob),
 			blobToDataUrl(thumbnailBlob),
