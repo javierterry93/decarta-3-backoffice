@@ -26,7 +26,7 @@ export function createSupabaseEngine(
 ): SupabaseClient<SupabaseDatabase> {
 	if (!config.url || !config.publishableKey) {
 		throw new Error(
-			'VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY son obligatorios con VITE_MENU_API=supabase',
+			'VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY son obligatorios',
 		);
 	}
 

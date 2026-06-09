@@ -147,9 +147,5 @@ function SupabaseAuthGateInner({ children }: SupabaseAuthGateProps) {
 }
 
 export function SupabaseAuthGate({ children }: SupabaseAuthGateProps) {
-	if ((import.meta.env.VITE_MENU_API ?? 'supabase') !== 'supabase') {
-		return children;
-	}
-
 	return <SupabaseAuthGateInner>{children}</SupabaseAuthGateInner>;
 }

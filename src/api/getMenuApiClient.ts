@@ -1,19 +1,23 @@
 import type { MenuApiClient } from './menuApiClient.ts';
-import { connectDatabaseSync } from '../database/connectDatabase.ts';
-import { createConnectedMenuClient } from './createConnectedMenuClient.ts';
-import { createHttpMenuApiClient } from './httpMenuApiClient.ts';
 
+export type MenuApiClientFactory = () => MenuApiClient;
+
+let factory: MenuApiClientFactory | null = null;
 let client: MenuApiClient | null = null;
 
-export function getMenuApiClient(): MenuApiClient {
-	if (client) return client;
+export function registerMenuApiClient(next: MenuApiClientFactory): void {
+	factory = next;
+	client = null;
+}
 
-	if (import.meta.env.VITE_MENU_API === 'remote') {
-		client = createHttpMenuApiClient(import.meta.env.VITE_API_BASE_URL ?? '/api');
-		return client;
+export function getMenuApiClient(): MenuApiClient {
+	if (!factory) {
+		throw new Error(
+			'No hay cliente API registrado. Regístralo en src/config/api.config.ts',
+		);
 	}
 
-	client = createConnectedMenuClient(connectDatabaseSync());
+	client ??= factory();
 	return client;
 }
 
