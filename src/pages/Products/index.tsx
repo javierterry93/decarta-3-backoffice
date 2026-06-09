@@ -5,13 +5,17 @@ import {
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
 import { toast } from 'sonner';
-import { useSnapshot, useSnapshotMutations } from '../../hooks/useSnapshot.ts';
+import {
+	useProductMutations,
+	useProductsPageData,
+} from '../../hooks/useProductsPage.ts';
 import { useImageThumbnailMap } from '../../hooks/useImageUrls.ts';
 import { ProductsLayout } from '../../layouts/ProductsLayout.tsx';
 
 export default function ProductsPage() {
-	const { data: snapshot, isLoading, error } = useSnapshot();
-	const mutations = useSnapshotMutations();
+	const { products, categories, images, isLoading, error } =
+		useProductsPageData();
+	const mutations = useProductMutations();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
 		[],
@@ -34,7 +38,7 @@ export default function ProductsPage() {
 		);
 	}, [navigate, searchParams]);
 
-	const imageMap = useImageThumbnailMap(snapshot?.images ?? []);
+	const imageMap = useImageThumbnailMap(images ?? []);
 
 	const handleDeleteProducts = useCallback(
 		async (ids: string[]) => {
@@ -45,13 +49,20 @@ export default function ProductsPage() {
 	);
 
 	if (isLoading) return <PageLoading />;
-	if (error || !snapshot) return <PageError />;
+	if (
+		error ||
+		products === undefined ||
+		categories === undefined ||
+		images === undefined
+	) {
+		return <PageError message={error?.message} />;
+	}
 
 	return (
 		<ProductsLayout
-			products={snapshot.products}
-			categories={snapshot.categories}
-			images={snapshot.images}
+			products={products}
+			categories={categories}
+			images={images}
 			imageMap={imageMap}
 			visibilityFilter={visibilityFilter}
 			onClearVisibilityFilter={() => navigate('/carta')}
@@ -71,13 +82,9 @@ export default function ProductsPage() {
 			}}
 			onDeleteProduct={(id) => mutations.deleteProduct.mutate(id)}
 			onDeleteProducts={handleDeleteProducts}
-			onReorderProducts={async (categoryId, orderedIds) => {
-				await mutations.reorderProducts.mutateAsync({
-					categoryId,
-					orderedIds,
-				});
-				showToast('Orden actualizado');
-			}}
+			onReorderProducts={(categoryId, orderedIds) =>
+				mutations.reorderProducts.mutate({ categoryId, orderedIds })
+			}
 			onNotify={showToast}
 		/>
 	);

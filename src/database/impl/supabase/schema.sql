@@ -31,6 +31,8 @@ drop table if exists public.businesses cascade;
 
 drop function if exists public.set_updated_at() cascade;
 drop function if exists public.set_last_modified() cascade;
+drop function if exists public.reorder_products(uuid, uuid[]) cascade;
+drop function if exists public.reorder_categories(uuid[]) cascade;
 
 -- =============================================================================
 -- BUSINESS
@@ -236,6 +238,52 @@ with check (
         and b.owner_user_id = auth.uid()
     )
 );
+
+-- =============================================================================
+-- REORDENACIÓN EN BLOQUE
+-- =============================================================================
+
+-- Actualiza el sort_order de los productos de una categoría en una sola
+-- llamada RPC, según la posición de cada id en el array recibido.
+-- Sin security definer: se ejecuta con permisos del invocador y RLS aplica.
+create or replace function public.reorder_products(
+    p_category_id uuid,
+    p_product_ids uuid[]
+)
+returns void
+language sql
+as $$
+    update public.products p
+    set sort_order = ids.ord - 1
+    from unnest(p_product_ids) with ordinality as ids(id, ord)
+    where p.id = ids.id
+    and p.category_id = p_category_id;
+$$;
+
+revoke all on function public.reorder_products(uuid, uuid[]) from public;
+
+grant execute on function public.reorder_products(uuid, uuid[])
+to authenticated;
+
+-- Actualiza el sort_order de las categorías en una sola llamada RPC, según
+-- la posición de cada id en el array recibido.
+-- Sin security definer: se ejecuta con permisos del invocador y RLS aplica.
+create or replace function public.reorder_categories(
+    p_category_ids uuid[]
+)
+returns void
+language sql
+as $$
+    update public.categories c
+    set sort_order = ids.ord - 1
+    from unnest(p_category_ids) with ordinality as ids(id, ord)
+    where c.id = ids.id;
+$$;
+
+revoke all on function public.reorder_categories(uuid[]) from public;
+
+grant execute on function public.reorder_categories(uuid[])
+to authenticated;
 
 -- =============================================================================
 -- SNAPSHOT (VISTA PÚBLICA)

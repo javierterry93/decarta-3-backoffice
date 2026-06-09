@@ -14,6 +14,7 @@ import type {
 
 export type ProductApi = Pick<
 	ApiClient,
+	| 'listProducts'
 	| 'createProduct'
 	| 'updateProduct'
 	| 'deleteProduct'
@@ -39,6 +40,10 @@ export function createProductApi(
 	repository: ProductRepository & CategoryRepository,
 ): ProductApi {
 	return {
+		async listProducts() {
+			return repository.listProducts();
+		},
+
 		async createProduct(input: ProductCreateInput) {
 			const categoryId =
 				input.categoryId ?? (await repository.listCategories())[0]?.id ?? '';

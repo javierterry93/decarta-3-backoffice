@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getApiClient, snapshotQueryKey } from '../api/index.ts';
+import {
+	categoriesQueryKey,
+	getApiClient,
+	snapshotQueryKey,
+} from '../api/index.ts';
 import { uploadImage, uploadImages } from '../services/imageService.ts';
 import type {
+	Snapshot,
 	BusinessSettingsUpdateInput,
 	CategoryCreateInput,
 	CategoryReorderInput,
@@ -88,10 +93,38 @@ export function useSnapshotMutations() {
 			onSuccess: invalidate,
 			onError,
 		}),
+		// Reordenar es optimista: se actualiza la caché al instante y no se
+		// vuelve a pedir el snapshot; solo se marca la lista de categorías.
 		reorderCategories: useMutation({
 			mutationFn: (input: CategoryReorderInput) => client.reorderCategories(input),
-			onSuccess: invalidate,
-			onError,
+			onMutate: async ({ orderedIds }: CategoryReorderInput) => {
+				await queryClient.cancelQueries({ queryKey: snapshotQueryKey });
+				const previous = queryClient.getQueryData<Snapshot>(snapshotQueryKey);
+
+				queryClient.setQueryData<Snapshot>(snapshotQueryKey, (snapshot) =>
+					snapshot
+						? {
+								...snapshot,
+								categories: snapshot.categories
+									.map((category) => {
+										const index = orderedIds.indexOf(category.id);
+										return index === -1 ? category : { ...category, order: index };
+									})
+									.sort((a, b) => a.order - b.order),
+							}
+						: snapshot,
+				);
+
+				return { previous };
+			},
+			onError: (error, _input, context) => {
+				if (context?.previous) {
+					queryClient.setQueryData(snapshotQueryKey, context.previous);
+				}
+				showMutationError(error);
+			},
+			onSuccess: () =>
+				queryClient.invalidateQueries({ queryKey: categoriesQueryKey }),
 		}),
 		resolveCategoryId: useMutation({
 			mutationFn: (input: CategoryResolveInput) => client.resolveCategoryId(input),

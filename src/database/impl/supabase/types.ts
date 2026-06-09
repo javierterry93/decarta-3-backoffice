@@ -77,7 +77,16 @@ export type SupabaseDatabase = {
 				Relationships: [];
 			};
 		};
-		Functions: Record<string, never>;
+		Functions: {
+			reorder_products: {
+				Args: { p_category_id: string; p_product_ids: string[] };
+				Returns: undefined;
+			};
+			reorder_categories: {
+				Args: { p_category_ids: string[] };
+				Returns: undefined;
+			};
+		};
 		Tables: {
 			businesses: {
 				Row: BusinessRow;

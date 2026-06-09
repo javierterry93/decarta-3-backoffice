@@ -14,6 +14,7 @@ import type {
 
 export type CategoryApi = Pick<
 	ApiClient,
+	| 'listCategories'
 	| 'createCategory'
 	| 'updateCategory'
 	| 'deleteCategory'
@@ -23,6 +24,10 @@ export type CategoryApi = Pick<
 
 export function createCategoryApi(repository: CategoryRepository): CategoryApi {
 	return {
+		async listCategories() {
+			return repository.listCategories();
+		},
+
 		async createCategory(input: CategoryCreateInput) {
 			const categories = await repository.listCategories();
 			const id = generateId();

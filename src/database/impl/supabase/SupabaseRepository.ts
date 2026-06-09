@@ -78,11 +78,10 @@ export class SupabaseRepository implements Repository {
 	}
 
 	async listProducts(): Promise<Product[]> {
-		const businessId = await requireBusinessId(this.client);
+		// RLS (products_owner_policy) acota por dueño; no hace falta join con businesses.
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.products)
-			.select('*, categories!inner(business_id)')
-			.eq('categories.business_id', businessId)
+			.select('*')
 			.order('sort_order', { ascending: true });
 
 		if (error) {
@@ -150,19 +149,14 @@ export class SupabaseRepository implements Repository {
 	): Promise<void> {
 		if (orderedIds.length === 0) return;
 
-		const results = await Promise.all(
-			orderedIds.map((id, index) =>
-				this.client
-					.from(SUPABASE_TABLES.products)
-					.update({ sort_order: index })
-					.eq('category_id', categoryId)
-					.eq('id', id),
-			),
-		);
+		// Una sola llamada RPC actualiza todos los sort_order de la categoría.
+		const { error } = await this.client.rpc('reorder_products', {
+			p_category_id: categoryId,
+			p_product_ids: orderedIds,
+		});
 
-		const failed = results.find((result) => result.error);
-		if (failed?.error) {
-			throw wrapDatabaseError('No se pudo reordenar productos', failed.error);
+		if (error) {
+			throw wrapDatabaseError('No se pudo reordenar productos', error);
 		}
 	}
 
@@ -181,11 +175,10 @@ export class SupabaseRepository implements Repository {
 	}
 
 	async listCategories(): Promise<Category[]> {
-		const businessId = await requireBusinessId(this.client);
+		// RLS (categories_owner_policy) acota por dueño; no hace falta consultar businesses.
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.categories)
 			.select('*')
-			.eq('business_id', businessId)
 			.order('sort_order', { ascending: true });
 
 		if (error) {
@@ -241,27 +234,21 @@ export class SupabaseRepository implements Repository {
 	async reorderCategories(orderedIds: string[]): Promise<void> {
 		if (orderedIds.length === 0) return;
 
-		const results = await Promise.all(
-			orderedIds.map((id, index) =>
-				this.client
-					.from(SUPABASE_TABLES.categories)
-					.update({ sort_order: index })
-					.eq('id', id),
-			),
-		);
+		// Una sola llamada RPC actualiza todos los sort_order de las categorías.
+		const { error } = await this.client.rpc('reorder_categories', {
+			p_category_ids: orderedIds,
+		});
 
-		const failed = results.find((result) => result.error);
-		if (failed?.error) {
-			throw wrapDatabaseError('No se pudo reordenar categorías', failed.error);
+		if (error) {
+			throw wrapDatabaseError('No se pudo reordenar categorías', error);
 		}
 	}
 
 	async listImages(): Promise<Image[]> {
-		const businessId = await requireBusinessId(this.client);
+		// RLS (images_owner_policy) acota por dueño; no hace falta consultar businesses.
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
 			.select('*')
-			.eq('business_id', businessId)
 			.order('created_at', { ascending: false });
 
 		if (error) {

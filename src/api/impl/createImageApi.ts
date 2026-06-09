@@ -3,10 +3,17 @@ import { generateId } from '../../utils/format.ts';
 import type { ApiClient } from '../ApiClient.ts';
 import type { ImageCreateInput } from '../types.ts';
 
-export type ImageApi = Pick<ApiClient, 'createImage' | 'deleteImage'>;
+export type ImageApi = Pick<
+	ApiClient,
+	'listImages' | 'createImage' | 'deleteImage'
+>;
 
 export function createImageApi(repository: ImageRepository): ImageApi {
 	return {
+		async listImages() {
+			return repository.listImages();
+		},
+
 		async createImage(input: ImageCreateInput) {
 			const id = generateId();
 			let url = input.url;

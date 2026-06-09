@@ -24,6 +24,10 @@ import type {
 export interface ApiClient {
 	getSnapshot(): Promise<Snapshot>;
 
+	listProducts(): Promise<Product[]>;
+	listCategories(): Promise<Category[]>;
+	listImages(): Promise<Image[]>;
+
 	createProduct(input: ProductCreateInput): Promise<EntityIdResponse>;
 	updateProduct(id: string, input: ProductUpdateInput): Promise<Product>;
 	deleteProduct(id: string): Promise<void>;
