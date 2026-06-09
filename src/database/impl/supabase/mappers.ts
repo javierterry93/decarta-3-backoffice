@@ -1,20 +1,18 @@
-import type {
-	BusinessSettingsUpdatePatch,
-	CategoryUpdatePatch,
-	ProductUpdatePatch,
-} from '../../database/MenuRepository.ts';
+import type { BusinessSettingsUpdatePatch } from '../../BusinessRepository.ts';
+import type { CategoryUpdatePatch } from '../../CategoryRepository.ts';
+import type { ProductUpdatePatch } from '../../ProductRepository.ts';
 import type {
 	BusinessSettings,
 	Category,
-	MenuImage,
+	Image,
 	Product,
-} from '../../types/index.ts';
+} from '../../../types/index.ts';
 import type {
 	BusinessRow,
 	CategoryRow,
-	MenuImageRow,
+	ImageRow,
 	ProductRow,
-} from '../../database/supabase/types.ts';
+} from './types.ts';
 
 export function mapCategoryRow(row: CategoryRow): Category {
 	return {
@@ -40,7 +38,7 @@ export function mapProductRow(row: ProductRow): Product {
 	};
 }
 
-export function mapMenuImageRow(row: MenuImageRow): MenuImage {
+export function mapImageRow(row: ImageRow): Image {
 	return {
 		id: row.id,
 		name: row.name,
@@ -87,10 +85,8 @@ export function toProductInsert(
 		| 'shortDescription'
 		| 'visible'
 		| 'imageId'
-		| 'createdAt'
-		| 'updatedAt'
 	>,
-): ProductRow {
+): Partial<ProductRow> & Pick<ProductRow, 'id' | 'category_id'> {
 	return {
 		id: product.id,
 		name: product.name,
@@ -100,25 +96,22 @@ export function toProductInsert(
 		short_description: product.shortDescription,
 		visible: product.visible,
 		image_id: product.imageId,
-		created_at: product.createdAt,
-		updated_at: product.updatedAt,
 	};
 }
 
-export function toMenuImageInsert(
-	image: Pick<MenuImage, 'id' | 'name' | 'createdAt'> & {
+export function toImageInsert(
+	image: Pick<Image, 'id' | 'name'> & {
 		url?: string;
 		thumbnailUrl?: string;
 	},
 	businessId: string,
-): MenuImageRow {
+): Partial<ImageRow> & Pick<ImageRow, 'id' | 'business_id' | 'name'> {
 	return {
 		id: image.id,
 		business_id: businessId,
 		name: image.name,
 		url: image.url ?? null,
 		thumbnail_url: image.thumbnailUrl ?? null,
-		created_at: image.createdAt,
 	};
 }
 
@@ -133,7 +126,6 @@ export function toProductPatch(patch: ProductUpdatePatch): Partial<ProductRow> {
 			: {}),
 		...(patch.visible !== undefined ? { visible: patch.visible } : {}),
 		...(patch.imageId !== undefined ? { image_id: patch.imageId } : {}),
-		...(patch.updatedAt !== undefined ? { updated_at: patch.updatedAt } : {}),
 	};
 }
 
@@ -166,9 +158,6 @@ export function toBusinessSettingsPatch(
 			: {}),
 		...(patch.socialTwitter !== undefined
 			? { social_twitter: patch.socialTwitter }
-			: {}),
-		...(patch.lastModified !== undefined
-			? { last_modified: patch.lastModified }
 			: {}),
 	};
 }

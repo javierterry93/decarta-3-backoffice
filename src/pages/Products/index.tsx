@@ -5,13 +5,13 @@ import {
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
 import { toast } from 'sonner';
-import { useMenu, useMenuMutations } from '../../hooks/useMenu.ts';
+import { useSnapshot, useSnapshotMutations } from '../../hooks/useSnapshot.ts';
 import { useImageThumbnailMap } from '../../hooks/useImageUrls.ts';
 import { ProductsLayout } from '../../layouts/ProductsLayout.tsx';
 
 export default function ProductsPage() {
-	const { data: menu, isLoading, error } = useMenu();
-	const mutations = useMenuMutations();
+	const { data: snapshot, isLoading, error } = useSnapshot();
+	const mutations = useSnapshotMutations();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
 		[],
@@ -34,7 +34,7 @@ export default function ProductsPage() {
 		);
 	}, [navigate, searchParams]);
 
-	const imageMap = useImageThumbnailMap(menu?.images ?? []);
+	const imageMap = useImageThumbnailMap(snapshot?.images ?? []);
 
 	const handleDeleteProducts = useCallback(
 		async (ids: string[]) => {
@@ -45,13 +45,13 @@ export default function ProductsPage() {
 	);
 
 	if (isLoading) return <PageLoading />;
-	if (error || !menu) return <PageError />;
+	if (error || !snapshot) return <PageError />;
 
 	return (
 		<ProductsLayout
-			products={menu.products}
-			categories={menu.categories}
-			images={menu.images}
+			products={snapshot.products}
+			categories={snapshot.categories}
+			images={snapshot.images}
 			imageMap={imageMap}
 			visibilityFilter={visibilityFilter}
 			onClearVisibilityFilter={() => navigate('/carta')}

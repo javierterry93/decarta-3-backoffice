@@ -2,20 +2,20 @@ import {
 	PageError,
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
-import { useMenu } from '../../hooks/useMenu.ts';
+import { useSnapshot } from '../../hooks/useSnapshot.ts';
 import { DashboardLayout } from '../../layouts/DashboardLayout.tsx';
 
 export default function DashboardPage() {
-	const { data: menu, isLoading, error } = useMenu();
+	const { data: snapshot, isLoading, error } = useSnapshot();
 
 	if (isLoading) return <PageLoading />;
-	if (error || !menu) return <PageError />;
+	if (error || !snapshot) return <PageError />;
 
 	return (
 		<DashboardLayout
-			products={menu.products}
-			categories={menu.categories}
-			lastModified={menu.lastModified}
+			products={snapshot.products}
+			categories={snapshot.categories}
+			lastModified={snapshot.lastModified}
 		/>
 	);
 }

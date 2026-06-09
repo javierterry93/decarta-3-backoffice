@@ -1,11 +1,8 @@
 /**
  * Punto de ensamblado de la capa API (@Configuration / @Bean).
- * MenuService sobre el MenuRepository de Supabase (schema.sql).
+ * ApiClient sobre el Repository de Supabase (schema.sql).
  */
-import { registerMenuApiClient } from '../api/getMenuApiClient.ts';
-import { createMenuService } from '../api/menuService.ts';
-import { connectDatabaseSync } from '../database/connectDatabase.ts';
+import { registerApiClient, createApiClient } from '../api/index.ts';
+import { connectDatabaseSync } from '../database/index.ts';
 
-registerMenuApiClient(() =>
-	createMenuService(connectDatabaseSync().getMenuRepository()),
-);
+registerApiClient(() => createApiClient(connectDatabaseSync().getRepository()));

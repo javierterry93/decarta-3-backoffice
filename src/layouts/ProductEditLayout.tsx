@@ -7,7 +7,7 @@ import { Label } from '../components/ui/Label.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { Switch } from '../components/ui/Switch.tsx';
 import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
-import type { Category, MenuImage } from '../types/index.ts';
+import type { Category, Image } from '../types/index.ts';
 import {
 	isProductDraftValid,
 	isProductNameValid,
@@ -26,7 +26,7 @@ export type ProductEditDraft = {
 type ProductEditLayoutProps = {
 	initialDraft: ProductEditDraft;
 	categories: Category[];
-	images: MenuImage[];
+	images: Image[];
 	submitLabel?: string;
 	onSave: (data: ProductEditDraft) => void;
 	onCancel: () => void;

@@ -1,14 +1,15 @@
 import type {
 	BusinessSettings,
 	Category,
-	MenuImage,
+	Image,
 	Product,
 } from '../types/index.ts';
 
-export type MenuSnapshot = {
+/** Unidad mínima de lectura: la carta completa del negocio. */
+export type Snapshot = {
 	products: Product[];
 	categories: Category[];
-	images: MenuImage[];
+	images: Image[];
 	settings: BusinessSettings;
 	lastModified: string;
 };
@@ -42,7 +43,6 @@ export type ProductImportItem = Omit<
 
 export type ProductImportResponse = {
 	importedCount: number;
-	lastModified: string;
 };
 
 export type ProductReorderInput = {

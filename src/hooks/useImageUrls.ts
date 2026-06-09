@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import type { MenuImage } from '../types/index.ts';
+import type { Image } from '../types/index.ts';
 import { resolveImageUrl } from '../services/imageStorage/imageResolver.ts';
 
 export function useImageObjectUrl(
 	imageId: string | null | undefined,
 	variant: 'full' | 'thumb',
-	image?: MenuImage,
+	image?: Image,
 ): string | null {
 	return useMemo(
 		() => (imageId ? resolveImageUrl(image, variant) : null),
@@ -13,9 +13,7 @@ export function useImageObjectUrl(
 	);
 }
 
-export function useImageThumbnailMap(
-	images: MenuImage[],
-): Record<string, string> {
+export function useImageThumbnailMap(images: Image[]): Record<string, string> {
 	return useMemo(() => {
 		const map: Record<string, string> = {};
 		for (const image of images) {

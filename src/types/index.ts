@@ -18,7 +18,7 @@ export type Category = {
 	visible: boolean;
 };
 
-export type MenuImage = {
+export type Image = {
 	id: string;
 	name: string;
 	createdAt: string;

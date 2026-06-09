@@ -1,10 +1,10 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { DatabaseConnection } from '../../database/DatabaseConnection.ts';
-import { wrapDatabaseError } from '../../database/DatabaseError.ts';
-import type { MenuRepository } from '../../database/MenuRepository.ts';
-import type { SupabaseDatabase } from '../../database/supabase/types.ts';
-import { SUPABASE_TABLES } from '../../database/supabase/types.ts';
-import { SupabaseMenuRepository } from './SupabaseMenuRepository.ts';
+import type { DatabaseConnection } from '../../DatabaseConnection.ts';
+import { wrapDatabaseError } from '../../DatabaseError.ts';
+import type { Repository } from '../../Repository.ts';
+import type { SupabaseDatabase } from './types.ts';
+import { SUPABASE_TABLES } from './types.ts';
+import { SupabaseRepository } from './SupabaseRepository.ts';
 
 export type SupabaseConnectionOptions = {
 	storageBucket?: string;
@@ -14,15 +14,15 @@ export function createSupabaseConnection(
 	client: SupabaseClient<SupabaseDatabase>,
 	options: SupabaseConnectionOptions = {},
 ): DatabaseConnection {
-	return new SupabaseConnection(client, options.storageBucket ?? 'menu-images');
+	return new SupabaseConnection(client, options.storageBucket ?? 'images');
 }
 
 class SupabaseConnection implements DatabaseConnection {
 	private connected = false;
-	private readonly repository: SupabaseMenuRepository;
+	private readonly repository: SupabaseRepository;
 
 	constructor(client: SupabaseClient<SupabaseDatabase>, storageBucket: string) {
-		this.repository = new SupabaseMenuRepository(client, storageBucket);
+		this.repository = new SupabaseRepository(client, storageBucket);
 	}
 
 	async connect(): Promise<void> {
@@ -50,7 +50,7 @@ class SupabaseConnection implements DatabaseConnection {
 		return this.connected;
 	}
 
-	getMenuRepository(): MenuRepository {
+	getRepository(): Repository {
 		return this.repository;
 	}
 }

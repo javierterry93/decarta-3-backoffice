@@ -1,6 +1,6 @@
-import type { DatabaseConnection } from './DatabaseConnection.ts';
+import type { DatabaseConnection } from '../DatabaseConnection.ts';
 import { createDatabaseConnection } from './registry.ts';
-import type { DatabaseConnectorFactory } from './types.ts';
+import type { DatabaseConnectorFactory } from '../DatabaseConnectorFactory.ts';
 
 export function connectDatabaseSync(
 	factory?: DatabaseConnectorFactory,

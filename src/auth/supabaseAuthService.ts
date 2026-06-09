@@ -1,5 +1,5 @@
 import type { Session } from '@supabase/supabase-js';
-import { getSupabaseClient } from '../database/supabase/supabaseClient.ts';
+import { getSupabaseClient } from '../database/impl/supabase/getSupabaseClient.ts';
 import {
 	clearSessionMeta,
 	isSessionMetaExpired,

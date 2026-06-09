@@ -1,10 +1,10 @@
-import { getMenuApiClient } from '../api/getMenuApiClient.ts';
+import { getApiClient } from '../api/index.ts';
 import { optimizeImage } from '../utils/imageOptimizer.ts';
 
 export async function uploadImage(file: File): Promise<string> {
 	const { blob, thumbnailBlob } = await optimizeImage(file);
 	const name = file.name.replace(/\.[^.]+$/, '') || 'Imagen';
-	const client = getMenuApiClient();
+	const client = getApiClient();
 
 	const image = await client.createImage({
 		name,

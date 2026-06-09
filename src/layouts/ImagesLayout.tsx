@@ -9,14 +9,14 @@ import {
 import { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
-import type { MenuImage, Product } from '../types/index.ts';
+import type { Image, Product } from '../types/index.ts';
 import { formatDate } from '../utils/format.ts';
 import { isSearchActive, matchesSearchQuery } from '../utils/searchText.ts';
 
 const PAGE_SIZE = 24;
 
 type ImagesLayoutProps = {
-	images: MenuImage[];
+	images: Image[];
 	products: Product[];
 	onUploadImages: (files: File[]) => Promise<void>;
 	onDeleteImage: (id: string) => void;
@@ -28,7 +28,7 @@ function ImageCard({
 	productCount,
 	onDelete,
 }: {
-	image: MenuImage;
+	image: Image;
 	productCount: number;
 	onDelete: () => void;
 }) {

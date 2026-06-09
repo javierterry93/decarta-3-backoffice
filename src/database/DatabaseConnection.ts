@@ -1,8 +1,8 @@
-import type { MenuRepository } from './MenuRepository.ts';
+import type { Repository } from './Repository.ts';
 
 export interface DatabaseConnection {
 	connect(): Promise<void>;
 	disconnect(): Promise<void>;
 	isConnected(): boolean;
-	getMenuRepository(): MenuRepository;
+	getRepository(): Repository;
 }

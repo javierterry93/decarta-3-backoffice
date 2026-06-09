@@ -1,6 +1,6 @@
-import type { DatabaseConnection } from './DatabaseConnection.ts';
-import { DatabaseError } from './DatabaseError.ts';
-import type { DatabaseConnectorFactory } from './types.ts';
+import type { DatabaseConnection } from '../DatabaseConnection.ts';
+import { DatabaseError } from '../DatabaseError.ts';
+import type { DatabaseConnectorFactory } from '../DatabaseConnectorFactory.ts';
 
 let connectorFactory: DatabaseConnectorFactory | null = null;
 let cachedConnection: DatabaseConnection | null = null;

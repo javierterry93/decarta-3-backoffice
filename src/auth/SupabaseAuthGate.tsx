@@ -7,7 +7,7 @@ import {
 	useState,
 } from 'react';
 import { PageLoading } from '../components/layout/PageLoading.tsx';
-import { getSupabaseClient } from '../database/supabase/supabaseClient.ts';
+import { getSupabaseClient } from '../database/impl/supabase/getSupabaseClient.ts';
 import LoginPage from '../pages/Login/index.tsx';
 import {
 	clearSessionMeta,

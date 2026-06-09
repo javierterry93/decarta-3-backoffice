@@ -6,10 +6,10 @@ import {
 } from '../../components/layout/PageLoading.tsx';
 import { toast } from 'sonner';
 import {
-	useMenu,
-	useMenuMutations,
+	useSnapshot,
+	useSnapshotMutations,
 	useUploadImage,
-} from '../../hooks/useMenu.ts';
+} from '../../hooks/useSnapshot.ts';
 import { SettingsLayout } from '../../layouts/SettingsLayout.tsx';
 import {
 	exportToCsv,
@@ -22,8 +22,8 @@ import { resolveImportedProductCategories } from '../../utils/categoryImport.ts'
 import type { Product } from '../../types/index.ts';
 
 export default function SettingsPage() {
-	const { data: menu, isLoading, error } = useMenu();
-	const mutations = useMenuMutations();
+	const { data: snapshot, isLoading, error } = useSnapshot();
+	const mutations = useSnapshotMutations();
 	const uploadImageMutation = useUploadImage();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
@@ -58,14 +58,14 @@ export default function SettingsPage() {
 	}, [mutations.updateSettings, showToast]);
 
 	const handleExportExcel = useCallback(() => {
-		if (!menu) return;
-		exportToExcel(menu.products, menu.categories);
-	}, [menu]);
+		if (!snapshot) return;
+		exportToExcel(snapshot.products, snapshot.categories);
+	}, [snapshot]);
 
 	const handleExportCsv = useCallback(() => {
-		if (!menu) return;
-		exportToCsv(menu.products, menu.categories);
-	}, [menu]);
+		if (!snapshot) return;
+		exportToCsv(snapshot.products, snapshot.categories);
+	}, [snapshot]);
 
 	const handleImportProducts = useCallback(
 		async (
@@ -80,18 +80,18 @@ export default function SettingsPage() {
 		[mutations.importProducts, mutations.resolveCategoryId, showToast],
 	);
 
-	const handleResetMenu = useCallback(async () => {
-		await mutations.resetMenu.mutateAsync();
-	}, [mutations.resetMenu]);
+	const handleResetSnapshot = useCallback(async () => {
+		await mutations.resetSnapshot.mutateAsync();
+	}, [mutations.resetSnapshot]);
 
 	if (isLoading) return <PageLoading />;
-	if (error || !menu) return <PageError />;
+	if (error || !snapshot) return <PageError />;
 
 	return (
 		<SettingsLayout
-			settings={menu.settings}
-			categories={menu.categories}
-			images={menu.images}
+			settings={snapshot.settings}
+			categories={snapshot.categories}
+			images={snapshot.images}
 			onSaveSettings={handleSaveSettings}
 			onUploadImage={handleUploadImage}
 			onSetLogo={handleSetLogo}
@@ -102,7 +102,7 @@ export default function SettingsPage() {
 			parseExcelFile={parseExcelFile}
 			guessColumnMappings={guessColumnMappings}
 			mapRowsToProducts={mapRowsToProducts}
-			onResetMenu={handleResetMenu}
+			onResetSnapshot={handleResetSnapshot}
 			onNotify={showToast}
 			onSignOut={supabaseAuth?.signOut}
 			sessionExpiresAt={supabaseAuth?.expiresAt}

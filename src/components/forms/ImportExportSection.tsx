@@ -11,7 +11,7 @@ import type {
 
 type ExcelPreviewRow = Record<string, string | number>;
 
-type MenuImportExportSectionProps = {
+type ImportExportSectionProps = {
 	categories: Category[];
 	onExportExcel: () => void;
 	onExportCsv: () => void;
@@ -31,7 +31,7 @@ type MenuImportExportSectionProps = {
 	onNotify: (message: string) => void;
 };
 
-export function MenuImportExportSection({
+export function ImportExportSection({
 	categories,
 	onExportExcel,
 	onExportCsv,
@@ -40,7 +40,7 @@ export function MenuImportExportSection({
 	guessColumnMappings,
 	mapRowsToProducts,
 	onNotify,
-}: MenuImportExportSectionProps) {
+}: ImportExportSectionProps) {
 	const [importOpen, setImportOpen] = useState(false);
 
 	return (

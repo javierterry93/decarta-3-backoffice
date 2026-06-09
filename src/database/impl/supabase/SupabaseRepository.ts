@@ -1,40 +1,34 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type {
-	BusinessSettingsUpdatePatch,
-	CategoryUpdatePatch,
-	MenuRepository,
-	ProductUpdatePatch,
-} from '../../database/MenuRepository.ts';
-import { wrapDatabaseError } from '../../database/DatabaseError.ts';
-import type { SupabaseDatabase } from '../../database/supabase/types.ts';
-import { SUPABASE_TABLES } from '../../database/supabase/types.ts';
+import type { BusinessSettingsUpdatePatch } from '../../BusinessRepository.ts';
+import type { CategoryUpdatePatch } from '../../CategoryRepository.ts';
+import type { ProductUpdatePatch } from '../../ProductRepository.ts';
+import type { Repository } from '../../Repository.ts';
+import type { Snapshot } from '../../SnapshotRepository.ts';
+import { wrapDatabaseError } from '../../DatabaseError.ts';
+import type { SupabaseDatabase } from './types.ts';
+import { SUPABASE_TABLES } from './types.ts';
 import type {
 	BusinessSettings,
 	Category,
-	MenuImage,
+	Image,
 	Product,
-} from '../../types/index.ts';
+} from '../../../types/index.ts';
 import { requireBusinessId } from './businessScope.ts';
 import {
 	mapBusinessRow,
 	mapCategoryRow,
-	mapMenuImageRow,
+	mapImageRow,
 	mapProductRow,
 	toBusinessSettingsPatch,
 	toCategoryInsert,
 	toCategoryPatch,
-	toMenuImageInsert,
+	toImageInsert,
 	toProductInsert,
 	toProductPatch,
 } from './mappers.ts';
-import { callSupabaseRpc } from './supabaseRpc.ts';
-import type { BusinessRow } from '../../database/supabase/types.ts';
+import type { BusinessRow } from './types.ts';
 
-function now(): string {
-	return new Date().toISOString();
-}
-
-export class SupabaseMenuRepository implements MenuRepository {
+export class SupabaseRepository implements Repository {
 	private readonly client: SupabaseClient<SupabaseDatabase>;
 	private readonly storageBucket: string;
 
@@ -49,6 +43,38 @@ export class SupabaseMenuRepository implements MenuRepository {
 
 	requireBusinessId(): Promise<string> {
 		return requireBusinessId(this.client);
+	}
+
+	async fetchSnapshot(): Promise<Snapshot> {
+		const businessId = await requireBusinessId(this.client);
+		const { data, error } = await this.client
+			.from(SUPABASE_TABLES.businesses)
+			// images! desambigua frente a la relación del logo (logo_image_id).
+			.select('*, categories(*, products(*)), images!images_business_id_fkey(*)')
+			.eq('id', businessId)
+			.single();
+
+		if (error) {
+			throw wrapDatabaseError('No se pudo cargar la carta', error);
+		}
+
+		const categoryRows = [...data.categories].sort(
+			(a, b) => a.sort_order - b.sort_order,
+		);
+		const productRows = data.categories
+			.flatMap((category) => category.products)
+			.sort((a, b) => a.sort_order - b.sort_order);
+		const imageRows = [...data.images].sort((a, b) =>
+			b.created_at.localeCompare(a.created_at),
+		);
+
+		return {
+			products: productRows.map((row) => mapProductRow(row)),
+			categories: categoryRows.map(mapCategoryRow),
+			images: imageRows.map(mapImageRow),
+			settings: mapBusinessRow(data),
+			lastModified: data.last_modified,
+		};
 	}
 
 	async listProducts(): Promise<Product[]> {
@@ -108,12 +134,14 @@ export class SupabaseMenuRepository implements MenuRepository {
 	async deleteProducts(ids: string[]): Promise<void> {
 		if (ids.length === 0) return;
 
-		await callSupabaseRpc(
-			this.client,
-			'delete_products',
-			{ p_ids: ids },
-			'No se pudieron eliminar productos',
-		);
+		const { error } = await this.client
+			.from(SUPABASE_TABLES.products)
+			.delete()
+			.in('id', ids);
+
+		if (error) {
+			throw wrapDatabaseError('No se pudieron eliminar productos', error);
+		}
 	}
 
 	async reorderProducts(
@@ -122,22 +150,34 @@ export class SupabaseMenuRepository implements MenuRepository {
 	): Promise<void> {
 		if (orderedIds.length === 0) return;
 
-		await callSupabaseRpc(
-			this.client,
-			'reorder_products',
-			{ p_category_id: categoryId, p_ordered_ids: orderedIds },
-			'No se pudo reordenar productos',
+		const results = await Promise.all(
+			orderedIds.map((id, index) =>
+				this.client
+					.from(SUPABASE_TABLES.products)
+					.update({ sort_order: index })
+					.eq('category_id', categoryId)
+					.eq('id', id),
+			),
 		);
+
+		const failed = results.find((result) => result.error);
+		if (failed?.error) {
+			throw wrapDatabaseError('No se pudo reordenar productos', failed.error);
+		}
 	}
 
-	async importProducts(products: Product[]): Promise<string> {
-		const rows = products.map(toProductInsert);
-		return callSupabaseRpc<string>(
-			this.client,
-			'import_products',
-			{ p_rows: rows },
-			'No se pudieron importar productos',
-		);
+	async importProducts(
+		products: Omit<Product, 'createdAt' | 'updatedAt'>[],
+	): Promise<void> {
+		if (products.length === 0) return;
+
+		const { error } = await this.client
+			.from(SUPABASE_TABLES.products)
+			.insert(products.map(toProductInsert));
+
+		if (error) {
+			throw wrapDatabaseError('No se pudieron importar productos', error);
+		}
 	}
 
 	async listCategories(): Promise<Category[]> {
@@ -187,26 +227,36 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async deleteCategory(id: string): Promise<void> {
-		await callSupabaseRpc(
-			this.client,
-			'delete_category',
-			{ p_id: id },
-			'No se pudo eliminar la categoría',
-		);
+		// Los productos de la categoría caen por on delete cascade (schema.sql).
+		const { error } = await this.client
+			.from(SUPABASE_TABLES.categories)
+			.delete()
+			.eq('id', id);
+
+		if (error) {
+			throw wrapDatabaseError('No se pudo eliminar la categoría', error);
+		}
 	}
 
 	async reorderCategories(orderedIds: string[]): Promise<void> {
 		if (orderedIds.length === 0) return;
 
-		await callSupabaseRpc(
-			this.client,
-			'reorder_categories',
-			{ p_ordered_ids: orderedIds },
-			'No se pudo reordenar categorías',
+		const results = await Promise.all(
+			orderedIds.map((id, index) =>
+				this.client
+					.from(SUPABASE_TABLES.categories)
+					.update({ sort_order: index })
+					.eq('id', id),
+			),
 		);
+
+		const failed = results.find((result) => result.error);
+		if (failed?.error) {
+			throw wrapDatabaseError('No se pudo reordenar categorías', failed.error);
+		}
 	}
 
-	async listImages(): Promise<MenuImage[]> {
+	async listImages(): Promise<Image[]> {
 		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
@@ -218,7 +268,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudieron listar imágenes', error);
 		}
 
-		return (data ?? []).map(mapMenuImageRow);
+		return (data ?? []).map(mapImageRow);
 	}
 
 	async uploadImageFiles(
@@ -254,16 +304,15 @@ export class SupabaseMenuRepository implements MenuRepository {
 		};
 	}
 
-	async insertImage(image: MenuImage): Promise<MenuImage> {
+	async insertImage(image: Omit<Image, 'createdAt'>): Promise<Image> {
 		const businessId = await requireBusinessId(this.client);
 		const { data, error } = await this.client
 			.from(SUPABASE_TABLES.images)
 			.insert(
-				toMenuImageInsert(
+				toImageInsert(
 					{
 						id: image.id,
 						name: image.name,
-						createdAt: image.createdAt,
 						url: image.url,
 						thumbnailUrl: image.thumbnailUrl,
 					},
@@ -277,7 +326,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 			throw wrapDatabaseError('No se pudo crear la imagen', error);
 		}
 
-		return mapMenuImageRow(data);
+		return mapImageRow(data);
 	}
 
 	async removeImageFiles(ids: string[]): Promise<void> {
@@ -296,7 +345,7 @@ export class SupabaseMenuRepository implements MenuRepository {
 		}
 	}
 
-	async deleteMenuImage(id: string): Promise<void> {
+	async deleteImage(id: string): Promise<void> {
 		const { error: storageError } = await this.client.storage
 			.from(this.storageBucket)
 			.remove([`${id}/full`, `${id}/thumb`]);
@@ -308,12 +357,15 @@ export class SupabaseMenuRepository implements MenuRepository {
 			);
 		}
 
-		await callSupabaseRpc(
-			this.client,
-			'delete_menu_image',
-			{ p_id: id },
-			'No se pudo eliminar la imagen',
-		);
+		// products.image_id y businesses.logo_image_id caen a null por FK (schema.sql).
+		const { error } = await this.client
+			.from(SUPABASE_TABLES.images)
+			.delete()
+			.eq('id', id);
+
+		if (error) {
+			throw wrapDatabaseError('No se pudo eliminar la imagen', error);
+		}
 	}
 
 	async getSettings(): Promise<BusinessSettings> {
@@ -329,20 +381,6 @@ export class SupabaseMenuRepository implements MenuRepository {
 		}
 
 		return mapBusinessRow(data as BusinessRow);
-	}
-
-	async fetchLastModified(businessId: string): Promise<string> {
-		const { data, error } = await this.client
-			.from(SUPABASE_TABLES.businesses)
-			.select('last_modified')
-			.eq('id', businessId)
-			.maybeSingle();
-
-		if (error) {
-			throw wrapDatabaseError('No se pudo leer lastModified', error);
-		}
-
-		return data?.last_modified ?? now();
 	}
 
 	async updateBusinessSettings(
@@ -364,28 +402,59 @@ export class SupabaseMenuRepository implements MenuRepository {
 	}
 
 	async touchLastModified(businessId: string): Promise<string> {
-		const timestamp = now();
-		const { error } = await this.client
+		const { data: current, error: readError } = await this.client
 			.from(SUPABASE_TABLES.businesses)
-			.update({ last_modified: timestamp })
-			.eq('id', businessId);
+			.select('last_modified')
+			.eq('id', businessId)
+			.single();
+
+		if (readError) {
+			throw wrapDatabaseError('No se pudo leer lastModified', readError);
+		}
+
+		const { data, error } = await this.client
+			.from(SUPABASE_TABLES.businesses)
+			.update({ last_modified: current.last_modified })
+			.eq('id', businessId)
+			.select('last_modified')
+			.single();
 
 		if (error) {
 			throw wrapDatabaseError('No se pudo actualizar lastModified', error);
 		}
 
-		return timestamp;
+		return data.last_modified;
 	}
 
-	async resetMenu(): Promise<void> {
+	async resetSnapshot(): Promise<void> {
+		const businessId = await requireBusinessId(this.client);
 		const images = await this.listImages();
 		await this.removeImageFiles(images.map((image) => image.id));
 
-		await callSupabaseRpc(
-			this.client,
-			'reset_menu',
-			{},
-			'No se pudo restablecer la carta',
-		);
+		const categoriesDelete = await this.client
+			.from(SUPABASE_TABLES.categories)
+			.delete()
+			.eq('business_id', businessId);
+
+		if (categoriesDelete.error) {
+			throw wrapDatabaseError(
+				'No se pudo restablecer la carta',
+				categoriesDelete.error,
+			);
+		}
+
+		const imagesDelete = await this.client
+			.from(SUPABASE_TABLES.images)
+			.delete()
+			.eq('business_id', businessId);
+
+		if (imagesDelete.error) {
+			throw wrapDatabaseError(
+				'No se pudo restablecer la carta',
+				imagesDelete.error,
+			);
+		}
+
+		await this.touchLastModified(businessId);
 	}
 }

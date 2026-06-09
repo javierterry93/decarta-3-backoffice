@@ -3,10 +3,11 @@ info:
  title: Mi Carta Backoffice API
  description: |
   Contrato HTTP que debe implementar el backend (X) para conectar el backoffice
-  de Mi Carta. Refleja el modelo de datos y las operaciones actuales de la app.
+  de Mi Carta. Refleja el modelo de datos y las operaciones actuales de la app,
+  organizado por entidad (Data, Product, Category, Image, Settings).
 
-  El cliente puede obtener el estado completo con `GET /menu` o usar los
-  endpoints granulares por recurso.
+  El cliente puede obtener los datos completos con `GET /data` o usar los
+  endpoints granulares por entidad.
  version: 1.0.0
 
 servers:
@@ -14,8 +15,8 @@ servers:
    description: API relativa al host del backend
 
 tags:
- - name: Menu
-   description: Estado agregado de la carta
+ - name: Data
+   description: Datos completos de la carta (entidad genérica Data)
  - name: Products
    description: Productos
  - name: Categories
@@ -26,29 +27,29 @@ tags:
    description: Configuración del negocio
 
 paths:
- /menu:
+ /data:
   get:
-   tags: [Menu]
-   summary: Obtener estado completo de la carta
-   operationId: getMenu
+   tags: [Data]
+   summary: Obtener los datos completos de la carta
+   operationId: getData
    responses:
     '200':
-     description: Snapshot actual
+     description: Datos actuales
      content:
       application/json:
        schema:
-        $ref: '#/components/schemas/MenuSnapshot'
+        $ref: '#/components/schemas/Data'
 
   delete:
-   tags: [Menu]
-   summary: Borrar toda la carta
+   tags: [Data]
+   summary: Borrar todos los datos de la carta
    description: |
     Elimina productos, categorías, imágenes y restaura la configuración del
     negocio a los valores por defecto. Acción irreversible.
-   operationId: resetMenu
+   operationId: resetData
    responses:
     '204':
-     description: Carta borrada
+     description: Datos borrados
     '400':
      $ref: '#/components/responses/BadRequest'
 
@@ -453,8 +454,9 @@ components:
       $ref: '#/components/schemas/ErrorResponse'
 
  schemas:
-  MenuSnapshot:
+  Data:
    type: object
+   description: Todos los datos del negocio (la carta completa)
    required:
     - products
     - categories
@@ -613,14 +615,10 @@ components:
    type: object
    required:
     - importedCount
-    - lastModified
    properties:
     importedCount:
      type: integer
      minimum: 0
-    lastModified:
-     type: string
-     format: date-time
 
   ProductReorderRequest:
    type: object

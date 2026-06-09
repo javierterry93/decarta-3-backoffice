@@ -4,13 +4,13 @@ import {
 	PageLoading,
 } from '../../components/layout/PageLoading.tsx';
 import { toast } from 'sonner';
-import { useMenu, useMenuMutations } from '../../hooks/useMenu.ts';
+import { useSnapshot, useSnapshotMutations } from '../../hooks/useSnapshot.ts';
 import type { CategoryEditDraft } from '../../layouts/CategoryEditLayout.tsx';
 import { CategoriesLayout } from '../../layouts/CategoriesLayout.tsx';
 
 export default function CategoriesPage() {
-	const { data: menu, isLoading, error } = useMenu();
-	const mutations = useMenuMutations();
+	const { data: snapshot, isLoading, error } = useSnapshot();
+	const mutations = useSnapshotMutations();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
 		[],
@@ -56,12 +56,12 @@ export default function CategoriesPage() {
 	);
 
 	if (isLoading) return <PageLoading />;
-	if (error || !menu) return <PageError />;
+	if (error || !snapshot) return <PageError />;
 
 	return (
 		<CategoriesLayout
-			categories={menu.categories}
-			products={menu.products}
+			categories={snapshot.categories}
+			products={snapshot.products}
 			onAddCategory={handleAddCategory}
 			onUpdateCategory={handleUpdateCategory}
 			onDeleteCategory={handleDeleteCategory}

@@ -5,15 +5,15 @@ import {
 } from '../../components/layout/PageLoading.tsx';
 import { toast } from 'sonner';
 import {
-	useMenu,
-	useMenuMutations,
+	useSnapshot,
+	useSnapshotMutations,
 	useUploadImages,
-} from '../../hooks/useMenu.ts';
+} from '../../hooks/useSnapshot.ts';
 import { ImagesLayout } from '../../layouts/ImagesLayout.tsx';
 
 export default function ImagesPage() {
-	const { data: menu, isLoading, error } = useMenu();
-	const mutations = useMenuMutations();
+	const { data: snapshot, isLoading, error } = useSnapshot();
+	const mutations = useSnapshotMutations();
 	const uploadImagesMutation = useUploadImages();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
@@ -36,12 +36,12 @@ export default function ImagesPage() {
 	);
 
 	if (isLoading) return <PageLoading />;
-	if (error || !menu) return <PageError />;
+	if (error || !snapshot) return <PageError />;
 
 	return (
 		<ImagesLayout
-			images={menu.images}
-			products={menu.products}
+			images={snapshot.images}
+			products={snapshot.products}
 			onUploadImages={handleUploadImages}
 			onDeleteImage={handleDeleteImage}
 			onNotify={showToast}

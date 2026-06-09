@@ -4,28 +4,28 @@ import { Button } from '../ui/Button.tsx';
 import { Input } from '../ui/Input.tsx';
 import { Label } from '../ui/Label.tsx';
 
-export const RESET_MENU_CONFIRMATION_TEXT = 'ELIMINAR';
+export const RESET_CONFIRMATION_TEXT = 'ELIMINAR';
 
-type ResetMenuDialogProps = {
+type ResetSnapshotDialogProps = {
 	open: boolean;
 	onClose: () => void;
 	onConfirm: () => void;
 	isPending?: boolean;
 };
 
-export function ResetMenuDialog({
+export function ResetSnapshotDialog({
 	open,
 	onClose,
 	onConfirm,
 	isPending = false,
-}: ResetMenuDialogProps) {
+}: ResetSnapshotDialogProps) {
 	const [confirmation, setConfirmation] = useState('');
 
 	useEffect(() => {
 		if (!open) setConfirmation('');
 	}, [open]);
 
-	const canConfirm = confirmation === RESET_MENU_CONFIRMATION_TEXT && !isPending;
+	const canConfirm = confirmation === RESET_CONFIRMATION_TEXT && !isPending;
 
 	return (
 		<Dialog
@@ -43,7 +43,7 @@ export function ResetMenuDialog({
 					<Label htmlFor="reset-confirmation">
 						Escribe{' '}
 						<span className="font-semibold text-foreground">
-							{RESET_MENU_CONFIRMATION_TEXT}
+							{RESET_CONFIRMATION_TEXT}
 						</span>{' '}
 						para confirmar
 					</Label>
@@ -51,7 +51,7 @@ export function ResetMenuDialog({
 						id="reset-confirmation"
 						value={confirmation}
 						onChange={(e) => setConfirmation(e.target.value)}
-						placeholder={RESET_MENU_CONFIRMATION_TEXT}
+						placeholder={RESET_CONFIRMATION_TEXT}
 						autoComplete="off"
 						spellCheck={false}
 					/>

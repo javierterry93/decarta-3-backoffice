@@ -1,7 +1,7 @@
 import type {
 	BusinessSettings,
 	Category,
-	MenuImage,
+	Image,
 	Product,
 } from '../types/index.ts';
 import type {
@@ -12,17 +12,17 @@ import type {
 	CategoryUpdateInput,
 	EntityIdResponse,
 	ImageCreateInput,
-	MenuSnapshot,
 	ProductBulkDeleteInput,
 	ProductCreateInput,
 	ProductImportItem,
 	ProductImportResponse,
 	ProductReorderInput,
 	ProductUpdateInput,
+	Snapshot,
 } from './types.ts';
 
-export interface MenuApiClient {
-	getMenu(): Promise<MenuSnapshot>;
+export interface ApiClient {
+	getSnapshot(): Promise<Snapshot>;
 
 	createProduct(input: ProductCreateInput): Promise<EntityIdResponse>;
 	updateProduct(id: string, input: ProductUpdateInput): Promise<Product>;
@@ -38,9 +38,9 @@ export interface MenuApiClient {
 	reorderCategories(input: CategoryReorderInput): Promise<void>;
 	resolveCategoryId(input: CategoryResolveInput): Promise<EntityIdResponse>;
 
-	createImage(input: ImageCreateInput): Promise<MenuImage>;
+	createImage(input: ImageCreateInput): Promise<Image>;
 	deleteImage(id: string): Promise<void>;
 
 	updateSettings(input: BusinessSettingsUpdateInput): Promise<BusinessSettings>;
-	resetMenu(): Promise<void>;
+	resetSnapshot(): Promise<void>;
 }

@@ -14,13 +14,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '../components/ui/Card.tsx';
-import { MenuImportExportSection } from '../components/forms/MenuImportExportSection.tsx';
-import { ResetMenuDialog } from '../components/dialogs/ResetMenuDialog.tsx';
+import { ImportExportSection } from '../components/forms/ImportExportSection.tsx';
+import { ResetSnapshotDialog } from '../components/dialogs/ResetSnapshotDialog.tsx';
 import type {
 	BusinessSettings,
 	Category,
 	ExcelColumnMapping,
-	MenuImage,
+	Image,
 	Product,
 } from '../types/index.ts';
 
@@ -41,7 +41,7 @@ type SettingsForm = z.infer<typeof settingsSchema>;
 type SettingsLayoutProps = {
 	settings: BusinessSettings;
 	categories: Category[];
-	images: MenuImage[];
+	images: Image[];
 	onSaveSettings: (data: SettingsForm) => void;
 	onUploadImage: (file: File) => Promise<string>;
 	onSetLogo: (imageId: string) => void;
@@ -61,7 +61,7 @@ type SettingsLayoutProps = {
 		mappings: ExcelColumnMapping[],
 		categories: Category[],
 	) => Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'order'>[];
-	onResetMenu: () => Promise<void>;
+	onResetSnapshot: () => Promise<void>;
 	onNotify: (message: string) => void;
 	onSignOut?: () => Promise<void>;
 	sessionExpiresAt?: number;
@@ -71,7 +71,7 @@ function LogoPreview({
 	logoImage,
 	onRemove,
 }: {
-	logoImage: MenuImage;
+	logoImage: Image;
 	onRemove: () => void;
 }) {
 	return (
@@ -108,7 +108,7 @@ export function SettingsLayout({
 	parseExcelFile,
 	guessColumnMappings,
 	mapRowsToProducts,
-	onResetMenu,
+	onResetSnapshot,
 	onNotify,
 	onSignOut,
 	sessionExpiresAt,
@@ -254,7 +254,7 @@ export function SettingsLayout({
 					</Button>
 				</form>
 
-				<MenuImportExportSection
+				<ImportExportSection
 					categories={categories}
 					onExportExcel={onExportExcel}
 					onExportCsv={onExportCsv}
@@ -298,7 +298,7 @@ export function SettingsLayout({
 				</Card>
 			</div>
 
-			<ResetMenuDialog
+			<ResetSnapshotDialog
 				open={resetOpen}
 				onClose={() => {
 					if (!isResetting) setResetOpen(false);
@@ -306,7 +306,7 @@ export function SettingsLayout({
 				isPending={isResetting}
 				onConfirm={() => {
 					setIsResetting(true);
-					void onResetMenu()
+					void onResetSnapshot()
 						.then(() => {
 							setResetOpen(false);
 							onNotify('Carta borrada');

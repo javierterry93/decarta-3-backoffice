@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getMenuApiClient } from '../api/getMenuApiClient.ts';
-import { menuQueryKey } from '../api/menuQueryKey.ts';
+import { getApiClient, snapshotQueryKey } from '../api/index.ts';
 import { uploadImage, uploadImages } from '../services/imageService.ts';
 import type {
 	BusinessSettingsUpdateInput,
@@ -17,10 +16,10 @@ import type {
 	ProductUpdateInput,
 } from '../api/types.ts';
 
-export function useMenu() {
+export function useSnapshot() {
 	return useQuery({
-		queryKey: menuQueryKey,
-		queryFn: () => getMenuApiClient().getMenu(),
+		queryKey: snapshotQueryKey,
+		queryFn: () => getApiClient().getSnapshot(),
 	});
 }
 
@@ -28,12 +27,12 @@ function showMutationError(error: Error) {
 	toast.error(error.message || 'No se pudo guardar los cambios');
 }
 
-export function useMenuMutations() {
+export function useSnapshotMutations() {
 	const queryClient = useQueryClient();
-	const client = getMenuApiClient();
+	const client = getApiClient();
 
 	const invalidate = () =>
-		queryClient.invalidateQueries({ queryKey: menuQueryKey });
+		queryClient.invalidateQueries({ queryKey: snapshotQueryKey });
 	const onError = showMutationError;
 
 	return {
@@ -115,8 +114,8 @@ export function useMenuMutations() {
 			onSuccess: invalidate,
 			onError,
 		}),
-		resetMenu: useMutation({
-			mutationFn: () => client.resetMenu(),
+		resetSnapshot: useMutation({
+			mutationFn: () => client.resetSnapshot(),
 			onSuccess: invalidate,
 			onError,
 		}),
@@ -128,7 +127,8 @@ export function useUploadImage() {
 
 	return useMutation({
 		mutationFn: (file: File) => uploadImage(file),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: menuQueryKey }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
 		onError: showMutationError,
 	});
 }
@@ -138,7 +138,8 @@ export function useUploadImages() {
 
 	return useMutation({
 		mutationFn: (files: File[]) => uploadImages(files),
-		onSuccess: () => queryClient.invalidateQueries({ queryKey: menuQueryKey }),
+		onSuccess: () =>
+			queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
 		onError: showMutationError,
 	});
 }

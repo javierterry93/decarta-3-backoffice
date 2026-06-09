@@ -8,7 +8,7 @@ import {
 	type ProductEditDraft,
 } from './ProductEditLayout.tsx';
 import { emptyProductDraft, productToDraft } from './productDraft.ts';
-import type { Category, MenuImage, Product } from '../types/index.ts';
+import type { Category, Image, Product } from '../types/index.ts';
 import { MobilePageLayout } from '../components/layout/MobilePageLayout.tsx';
 import { cn } from '../utils/cn.ts';
 
@@ -19,7 +19,7 @@ type ProductVisibilityFilter = 'all' | 'hidden';
 type ProductsLayoutProps = {
 	products: Product[];
 	categories: Category[];
-	images: MenuImage[];
+	images: Image[];
 	imageMap: Record<string, string>;
 	visibilityFilter?: ProductVisibilityFilter;
 	onClearVisibilityFilter?: () => void;
