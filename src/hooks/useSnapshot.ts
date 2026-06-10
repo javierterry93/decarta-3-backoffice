@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
-	categoriesQueryKey,
 	getApiClient,
 	imagesQueryKey,
 	snapshotQueryKey,
 } from '../api/index.ts';
 import { uploadImage, uploadImages } from '../services/imageService.ts';
+import { invalidateCategoriesAcrossTabs } from '../sync/categoriesSync.ts';
 import type {
 	Snapshot,
 	BusinessSettingsUpdateInput,
@@ -39,6 +39,9 @@ export function useSnapshotMutations() {
 
 	const invalidate = () =>
 		queryClient.invalidateQueries({ queryKey: snapshotQueryKey });
+	const invalidateCategories = () => invalidateCategoriesAcrossTabs(queryClient);
+	const invalidateSnapshotAndCategories = () =>
+		Promise.all([invalidate(), invalidateCategories()]);
 	const onError = showMutationError;
 
 	return {
@@ -80,18 +83,18 @@ export function useSnapshotMutations() {
 		}),
 		createCategory: useMutation({
 			mutationFn: (input: CategoryCreateInput) => client.createCategory(input),
-			onSuccess: invalidate,
+			onSuccess: invalidateSnapshotAndCategories,
 			onError,
 		}),
 		updateCategory: useMutation({
 			mutationFn: ({ id, input }: { id: string; input: CategoryUpdateInput }) =>
 				client.updateCategory(id, input),
-			onSuccess: invalidate,
+			onSuccess: invalidateSnapshotAndCategories,
 			onError,
 		}),
 		deleteCategory: useMutation({
 			mutationFn: (id: string) => client.deleteCategory(id),
-			onSuccess: invalidate,
+			onSuccess: invalidateSnapshotAndCategories,
 			onError,
 		}),
 		// Reordenar es optimista: se actualiza la caché al instante y no se
@@ -124,8 +127,7 @@ export function useSnapshotMutations() {
 				}
 				showMutationError(error);
 			},
-			onSuccess: () =>
-				queryClient.invalidateQueries({ queryKey: categoriesQueryKey }),
+			onSuccess: invalidateCategories,
 		}),
 		resolveCategoryId: useMutation({
 			mutationFn: (input: CategoryResolveInput) => client.resolveCategoryId(input),

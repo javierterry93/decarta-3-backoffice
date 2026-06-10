@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -14,6 +15,7 @@ import type {
 	ProductUpdateInput,
 } from '../api/types.ts';
 import type { Product } from '../types/index.ts';
+import { subscribeCategoriesChanged } from '../sync/categoriesSync.ts';
 
 /**
  * Datos de la página de productos con consultas por entidad
@@ -21,6 +23,13 @@ import type { Product } from '../types/index.ts';
  */
 export function useProductsPageData() {
 	const client = getApiClient();
+	const queryClient = useQueryClient();
+
+	useEffect(() => {
+		return subscribeCategoriesChanged(() => {
+			void queryClient.invalidateQueries({ queryKey: categoriesQueryKey });
+		});
+	}, [queryClient]);
 
 	const products = useQuery({
 		queryKey: productsQueryKey,
