@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import {
 	categoriesQueryKey,
 	getApiClient,
+	imagesQueryKey,
 	snapshotQueryKey,
 } from '../api/index.ts';
 import { uploadImage, uploadImages } from '../services/imageService.ts';
@@ -138,7 +139,11 @@ export function useSnapshotMutations() {
 		}),
 		deleteImage: useMutation({
 			mutationFn: (id: string) => client.deleteImage(id),
-			onSuccess: invalidate,
+			onSuccess: () =>
+				Promise.all([
+					queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
+					queryClient.invalidateQueries({ queryKey: imagesQueryKey }),
+				]),
 			onError,
 		}),
 		updateSettings: useMutation({
@@ -161,7 +166,10 @@ export function useUploadImage() {
 	return useMutation({
 		mutationFn: (file: File) => uploadImage(file),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
+			Promise.all([
+				queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
+				queryClient.invalidateQueries({ queryKey: imagesQueryKey }),
+			]),
 		onError: showMutationError,
 	});
 }
@@ -172,7 +180,10 @@ export function useUploadImages() {
 	return useMutation({
 		mutationFn: (files: File[]) => uploadImages(files),
 		onSuccess: () =>
-			queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
+			Promise.all([
+				queryClient.invalidateQueries({ queryKey: snapshotQueryKey }),
+				queryClient.invalidateQueries({ queryKey: imagesQueryKey }),
+			]),
 		onError: showMutationError,
 	});
 }

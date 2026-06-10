@@ -9,6 +9,10 @@ import {
 	useProductMutations,
 	useProductsPageData,
 } from '../../hooks/useProductsPage.ts';
+import {
+	useSnapshotMutations,
+	useUploadImage,
+} from '../../hooks/useSnapshot.ts';
 import { useImageThumbnailMap } from '../../hooks/useImageUrls.ts';
 import { ProductsLayout } from '../../layouts/ProductsLayout.tsx';
 
@@ -16,6 +20,8 @@ export default function ProductsPage() {
 	const { products, categories, images, isLoading, error } =
 		useProductsPageData();
 	const mutations = useProductMutations();
+	const snapshotMutations = useSnapshotMutations();
+	const uploadImageMutation = useUploadImage();
 	const showToast = useCallback(
 		(message: string) => toast.success(message, { duration: 3000 }),
 		[],
@@ -46,6 +52,16 @@ export default function ProductsPage() {
 			showToast(`${ids.length} productos eliminados`);
 		},
 		[mutations.deleteProducts, showToast],
+	);
+
+	const handleUploadImage = useCallback(
+		(file: File) => uploadImageMutation.mutateAsync(file),
+		[uploadImageMutation],
+	);
+
+	const handleDeleteImage = useCallback(
+		(id: string) => snapshotMutations.deleteImage.mutateAsync(id),
+		[snapshotMutations.deleteImage],
 	);
 
 	if (isLoading) return <PageLoading />;
@@ -85,6 +101,8 @@ export default function ProductsPage() {
 			onReorderProducts={(categoryId, orderedIds) =>
 				mutations.reorderProducts.mutate({ categoryId, orderedIds })
 			}
+			onUploadImage={handleUploadImage}
+			onDeleteImage={handleDeleteImage}
 			onNotify={showToast}
 		/>
 	);

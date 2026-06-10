@@ -1,5 +1,6 @@
-import { Copy, Trash2 } from 'lucide-react';
+import { Copy, ImageIcon, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Dialog } from '../components/dialogs/ConfirmDialog.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { EuroPriceInput } from '../components/forms/EuroPriceInput.tsx';
 import { Input } from '../components/ui/Input.tsx';
@@ -7,6 +8,7 @@ import { Label } from '../components/ui/Label.tsx';
 import { Select } from '../components/ui/Select.tsx';
 import { Switch } from '../components/ui/Switch.tsx';
 import { useImageObjectUrl } from '../hooks/useImageUrls.ts';
+import { EntityImageLayout } from './EntityImageLayout.tsx';
 import type { Category, Image } from '../types/index.ts';
 import {
 	isProductDraftValid,
@@ -27,6 +29,9 @@ type ProductEditLayoutProps = {
 	initialDraft: ProductEditDraft;
 	categories: Category[];
 	images: Image[];
+	onUploadImage: (file: File) => Promise<string>;
+	onDeleteImage: (id: string) => Promise<void>;
+	onNotify?: (message: string) => void;
 	submitLabel?: string;
 	onSave: (data: ProductEditDraft) => void;
 	onCancel: () => void;
@@ -38,6 +43,9 @@ export function ProductEditLayout({
 	initialDraft,
 	categories,
 	images,
+	onUploadImage,
+	onDeleteImage,
+	onNotify,
 	submitLabel = 'Guardar',
 	onSave,
 	onCancel,
@@ -45,6 +53,7 @@ export function ProductEditLayout({
 	onDelete,
 }: ProductEditLayoutProps) {
 	const [draft, setDraft] = useState<ProductEditDraft>(initialDraft);
+	const [imageManagerOpen, setImageManagerOpen] = useState(false);
 
 	useEffect(() => {
 		setDraft(initialDraft);
@@ -60,11 +69,6 @@ export function ProductEditLayout({
 		value: c.id,
 		label: c.name || 'Sin nombre',
 	}));
-
-	const imageOptions = [
-		{ value: '', label: 'Sin imagen' },
-		...images.map((i) => ({ value: i.id, label: i.name })),
-	];
 
 	const patch = (data: Partial<ProductEditDraft>) =>
 		setDraft((prev) => ({ ...prev, ...data }));
@@ -135,19 +139,34 @@ export function ProductEditLayout({
 				</div>
 
 				<div className="space-y-2">
-					<Label htmlFor="product-image">Imagen</Label>
-					<Select
-						value={draft.imageId ?? ''}
-						onChange={(v) => patch({ imageId: v || null })}
-						options={imageOptions}
-					/>
-					{draft.imageId && previewUrl && (
-						<img
-							src={previewUrl}
-							alt=""
-							className="mt-2 h-16 w-16 rounded object-cover"
-						/>
-					)}
+					<Label>Imagen</Label>
+					<button
+						type="button"
+						onClick={() => setImageManagerOpen(true)}
+						className="flex w-full items-center gap-3 rounded-xl border border-separator bg-fill p-3 text-left transition-colors hover:bg-surface-elevated">
+						{previewUrl ? (
+							<img
+								src={previewUrl}
+								alt=""
+								className="h-14 w-14 shrink-0 rounded-lg object-cover"
+							/>
+						) : (
+							<span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-foreground-muted">
+								<ImageIcon className="h-6 w-6" aria-hidden />
+							</span>
+						)}
+						<span className="min-w-0 flex-1">
+							<span className="block text-sm font-medium text-foreground">
+								{draft.imageId
+									? (images.find((i) => i.id === draft.imageId)?.name ??
+										'Imagen asignada')
+									: 'Sin imagen'}
+							</span>
+							<span className="block text-xs text-foreground-muted">
+								Gestionar imagen del producto
+							</span>
+						</span>
+					</button>
 				</div>
 
 				<Switch
@@ -196,6 +215,22 @@ export function ProductEditLayout({
 					{submitLabel}
 				</Button>
 			</div>
+
+			<Dialog
+				open={imageManagerOpen}
+				onClose={() => setImageManagerOpen(false)}
+				title="Imagen del producto">
+				<EntityImageLayout
+					imageId={draft.imageId}
+					images={images}
+					entityLabel="producto"
+					onAssign={(imageId) => patch({ imageId })}
+					onUploadImage={onUploadImage}
+					onDeleteImage={onDeleteImage}
+					onClose={() => setImageManagerOpen(false)}
+					onNotify={onNotify}
+				/>
+			</Dialog>
 		</form>
 	);
 }

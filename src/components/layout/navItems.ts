@@ -1,7 +1,6 @@
 import {
 	ClipboardList,
 	FolderOpen,
-	Image,
 	LayoutDashboard,
 	Settings,
 } from 'lucide-react';
@@ -15,7 +14,6 @@ export const primaryNavItems = [
 		icon: FolderOpen,
 		end: false as const,
 	},
-	{ to: '/imagenes', label: 'Imágenes', icon: Image, end: false as const },
 ] as const;
 
 export const secondaryNavItems = [
@@ -33,7 +31,6 @@ export const pageTitles: Record<string, string> = {
 	'/': 'Inicio',
 	'/carta': 'Carta',
 	'/categorias': 'Categorías',
-	'/imagenes': 'Imágenes',
 	'/configuracion': 'Configuración',
 };
 

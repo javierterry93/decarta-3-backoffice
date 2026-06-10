@@ -8,6 +8,6 @@ import { getSupabaseClient } from '../database/impl/supabase/getSupabaseClient.t
 
 registerDatabaseConnector(() =>
 	createSupabaseConnection(getSupabaseClient(), {
-		storageBucket: import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'images',
+		storageBucket: import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'imageStore',
 	}),
 );

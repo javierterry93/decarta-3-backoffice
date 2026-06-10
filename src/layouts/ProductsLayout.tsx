@@ -31,6 +31,8 @@ type ProductsLayoutProps = {
 	onDeleteProduct: (id: string) => void;
 	onDeleteProducts: (ids: string[]) => void;
 	onReorderProducts: (categoryId: string, orderedIds: string[]) => void;
+	onUploadImage: (file: File) => Promise<string>;
+	onDeleteImage: (id: string) => Promise<void>;
 	onNotify: (message: string) => void;
 };
 
@@ -49,6 +51,8 @@ export function ProductsLayout({
 	onDeleteProduct,
 	onDeleteProducts,
 	onReorderProducts,
+	onUploadImage,
+	onDeleteImage,
 	onNotify,
 }: ProductsLayoutProps) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -237,6 +241,9 @@ export function ProductsLayout({
 						initialDraft={editorDraft}
 						categories={categories}
 						images={images}
+						onUploadImage={onUploadImage}
+						onDeleteImage={onDeleteImage}
+						onNotify={onNotify}
 						submitLabel={editor?.mode === 'create' ? 'Crear producto' : 'Guardar'}
 						onSave={handleSave}
 						onCancel={closeEditor}

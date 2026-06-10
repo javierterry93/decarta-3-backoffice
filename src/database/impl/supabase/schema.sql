@@ -352,3 +352,50 @@ create trigger businesses_set_last_modified
 before update on public.businesses
 for each row
 execute function public.set_last_modified();
+
+-- =============================================================================
+-- STORAGE (imageStore)
+-- =============================================================================
+-- Bucket de imágenes de carta (full + thumb por id).
+-- Variable de entorno: VITE_SUPABASE_STORAGE_BUCKET=imageStore
+-- upsert en upload requiere INSERT + SELECT + UPDATE.
+
+drop policy if exists image_store_public_read on storage.objects;
+drop policy if exists image_store_delete on storage.objects;
+drop policy if exists image_store_update on storage.objects;
+drop policy if exists image_store_select on storage.objects;
+drop policy if exists image_store_insert on storage.objects;
+
+insert into storage.buckets (id, name, public)
+values ('imageStore', 'imageStore', true)
+on conflict (id) do update set public = true;
+
+create policy image_store_insert
+on storage.objects
+for insert
+to authenticated
+with check (bucket_id = 'imageStore');
+
+create policy image_store_select
+on storage.objects
+for select
+to authenticated
+using (bucket_id = 'imageStore');
+
+create policy image_store_update
+on storage.objects
+for update
+to authenticated
+using (bucket_id = 'imageStore');
+
+create policy image_store_delete
+on storage.objects
+for delete
+to authenticated
+using (bucket_id = 'imageStore');
+
+create policy image_store_public_read
+on storage.objects
+for select
+to public
+using (bucket_id = 'imageStore');

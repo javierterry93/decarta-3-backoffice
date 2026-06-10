@@ -14,7 +14,7 @@ export function createSupabaseConnection(
 	client: SupabaseClient<SupabaseDatabase>,
 	options: SupabaseConnectionOptions = {},
 ): DatabaseConnection {
-	return new SupabaseConnection(client, options.storageBucket ?? 'images');
+	return new SupabaseConnection(client, options.storageBucket ?? 'imageStore');
 }
 
 class SupabaseConnection implements DatabaseConnection {
