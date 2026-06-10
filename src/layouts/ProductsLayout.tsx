@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button.tsx';
 import {
 	ProductEditLayout,
 	type ProductEditDraft,
+	type ProductEditScreen,
 } from './ProductEditLayout.tsx';
 import { emptyProductDraft, productToDraft } from './productDraft.ts';
 import type { Category, Image, Product } from '../types/index.ts';
@@ -57,6 +58,7 @@ export function ProductsLayout({
 }: ProductsLayoutProps) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const [editor, setEditor] = useState<ProductEditor | null>(null);
+	const [editScreen, setEditScreen] = useState<ProductEditScreen>('form');
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
 	const consumedEditProductIdRef = useRef<string | null>(null);
@@ -80,9 +82,22 @@ export function ProductsLayout({
 	}, [editor, categories, editingProduct]);
 
 	const closeEditor = useCallback(() => {
+		setEditScreen('form');
 		setEditor(null);
 		onCloseEditor?.();
 	}, [onCloseEditor]);
+
+	const handleEditorDialogClose = useCallback(() => {
+		if (editScreen === 'images') {
+			setEditScreen('form');
+			return;
+		}
+		closeEditor();
+	}, [closeEditor, editScreen]);
+
+	useEffect(() => {
+		setEditScreen('form');
+	}, [editor]);
 
 	useEffect(() => {
 		if (!editProductId) {
@@ -229,8 +244,18 @@ export function ProductsLayout({
 
 			<Dialog
 				open={editor !== null && editorDraft !== null}
-				onClose={closeEditor}
-				title={editor?.mode === 'create' ? 'Nuevo producto' : 'Editar producto'}>
+				onClose={handleEditorDialogClose}
+				title={
+					editScreen === 'images'
+						? 'Imagen del producto'
+						: editor?.mode === 'create'
+							? 'Nuevo producto'
+							: 'Editar producto'
+				}
+				description={
+					editScreen === 'images' ? 'Cada producto tiene su propia foto' : undefined
+				}
+				className={editScreen === 'images' ? 'lg:max-w-3xl' : undefined}>
 				{editorDraft && (
 					<ProductEditLayout
 						key={
@@ -241,6 +266,8 @@ export function ProductsLayout({
 						initialDraft={editorDraft}
 						categories={categories}
 						images={images}
+						screen={editScreen}
+						onScreenChange={setEditScreen}
 						onUploadImage={onUploadImage}
 						onDeleteImage={onDeleteImage}
 						onNotify={onNotify}

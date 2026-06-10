@@ -1,6 +1,5 @@
-import { Copy, ImageIcon, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, ImageIcon, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Dialog } from '../components/dialogs/ConfirmDialog.tsx';
 import { Button } from '../components/ui/Button.tsx';
 import { EuroPriceInput } from '../components/forms/EuroPriceInput.tsx';
 import { Input } from '../components/ui/Input.tsx';
@@ -16,6 +15,8 @@ import {
 	isProductPriceValid,
 } from '../utils/productValidation.ts';
 
+export type ProductEditScreen = 'form' | 'images';
+
 export type ProductEditDraft = {
 	name: string;
 	categoryId: string;
@@ -29,6 +30,8 @@ type ProductEditLayoutProps = {
 	initialDraft: ProductEditDraft;
 	categories: Category[];
 	images: Image[];
+	screen: ProductEditScreen;
+	onScreenChange: (screen: ProductEditScreen) => void;
 	onUploadImage: (file: File) => Promise<string>;
 	onDeleteImage: (id: string) => Promise<void>;
 	onNotify?: (message: string) => void;
@@ -43,6 +46,8 @@ export function ProductEditLayout({
 	initialDraft,
 	categories,
 	images,
+	screen,
+	onScreenChange,
 	onUploadImage,
 	onDeleteImage,
 	onNotify,
@@ -53,7 +58,6 @@ export function ProductEditLayout({
 	onDelete,
 }: ProductEditLayoutProps) {
 	const [draft, setDraft] = useState<ProductEditDraft>(initialDraft);
-	const [imageManagerOpen, setImageManagerOpen] = useState(false);
 
 	useEffect(() => {
 		setDraft(initialDraft);
@@ -80,6 +84,34 @@ export function ProductEditLayout({
 		? 'El precio es obligatorio'
 		: null;
 	const canSave = isProductDraftValid(draft);
+
+	if (screen === 'images') {
+		return (
+			<div className="flex min-h-0 flex-1 flex-col">
+				<div className="min-h-0 flex-1 overflow-y-auto p-0.5 pb-4">
+					<EntityImageLayout
+						imageId={draft.imageId}
+						image={images.find((i) => i.id === draft.imageId)}
+						entityLabel="producto"
+						onImageChange={(imageId) => patch({ imageId })}
+						onUploadImage={onUploadImage}
+						onDeleteImage={onDeleteImage}
+						onNotify={onNotify}
+					/>
+				</div>
+				<div className="flex shrink-0 border-t border-separator bg-surface-elevated pt-4">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={() => onScreenChange('form')}
+						className="w-full lg:ml-auto lg:w-auto">
+						<ArrowLeft className="h-4 w-4 shrink-0" aria-hidden />
+						Volver al producto
+					</Button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<form
@@ -142,7 +174,7 @@ export function ProductEditLayout({
 					<Label>Imagen</Label>
 					<button
 						type="button"
-						onClick={() => setImageManagerOpen(true)}
+						onClick={() => onScreenChange('images')}
 						className="flex w-full items-center gap-3 rounded-xl border border-separator bg-fill p-3 text-left transition-colors hover:bg-surface-elevated">
 						{previewUrl ? (
 							<img
@@ -215,22 +247,6 @@ export function ProductEditLayout({
 					{submitLabel}
 				</Button>
 			</div>
-
-			<Dialog
-				open={imageManagerOpen}
-				onClose={() => setImageManagerOpen(false)}
-				title="Imagen del producto">
-				<EntityImageLayout
-					imageId={draft.imageId}
-					images={images}
-					entityLabel="producto"
-					onAssign={(imageId) => patch({ imageId })}
-					onUploadImage={onUploadImage}
-					onDeleteImage={onDeleteImage}
-					onClose={() => setImageManagerOpen(false)}
-					onNotify={onNotify}
-				/>
-			</Dialog>
 		</form>
 	);
 }

@@ -1,8 +1,20 @@
-import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
 import { cn } from '../../utils/cn.ts';
 import { Button } from '../ui/Button.tsx';
 
 const MODAL_DURATION_MS = 200;
+
+function useModalEscape(open: boolean, onClose: () => void) {
+	useEffect(() => {
+		if (!open) return;
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') onClose();
+		};
+		window.addEventListener('keydown', handleKeyDown);
+		return () => window.removeEventListener('keydown', handleKeyDown);
+	}, [open, onClose]);
+}
 
 type ModalPhase = 'closed' | 'entering' | 'open' | 'leaving';
 
@@ -54,6 +66,8 @@ function ModalFrame({
 }: ModalFrameProps) {
 	const { mounted, visible } = useModalTransition(open);
 	const isFullscreenMobile = mobileLayout === 'fullscreen';
+
+	useModalEscape(open, onClose);
 
 	if (!mounted) return null;
 
@@ -154,6 +168,7 @@ type DialogProps = {
 	open: boolean;
 	onClose: () => void;
 	title: string;
+	description?: string;
 	children: React.ReactNode;
 	className?: string;
 	fullScreenMobile?: boolean;
@@ -163,33 +178,57 @@ export function Dialog({
 	open,
 	onClose,
 	title,
+	description,
 	children,
 	className,
 	fullScreenMobile = true,
 }: DialogProps) {
+	const titleId = useId();
+
 	return (
 		<ModalFrame
 			open={open}
 			onClose={onClose}
+			ariaLabelledBy={titleId}
 			mobileLayout={fullScreenMobile ? 'fullscreen' : 'sheet'}
 			panelClassName={cn(
 				'border border-separator bg-surface-elevated shadow-lg',
 				fullScreenMobile &&
-					'max-lg:flex max-lg:min-h-0 max-lg:h-dvh max-lg:w-full max-lg:max-w-none max-lg:flex-col max-lg:border-0 max-lg:p-0 max-lg:shadow-none',
-				'lg:max-h-[90vh] lg:max-w-2xl lg:overflow-y-auto lg:rounded-xl lg:p-6',
+					'flex max-lg:h-dvh max-lg:min-h-0 max-lg:w-full max-lg:max-w-none max-lg:flex-col max-lg:border-0 max-lg:p-0 max-lg:shadow-none',
+				fullScreenMobile &&
+					'flex max-h-[90vh] flex-col overflow-hidden lg:max-w-2xl lg:rounded-xl lg:p-6',
 				!fullScreenMobile && 'max-lg:rounded-b-none p-5 max-lg:p-5',
 				className,
 			)}>
 			<div
 				className={cn(
 					fullScreenMobile &&
-						'dialog-content flex min-h-0 w-full flex-1 flex-col pt-[max(1rem,env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] lg:max-w-none lg:p-0 lg:pt-0 lg:pb-0',
+						'dialog-content flex min-h-0 flex-1 flex-col overflow-hidden pt-[max(1rem,env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)] lg:min-h-0 lg:p-0 lg:pt-0 lg:pb-0',
 					!fullScreenMobile && 'contents',
 				)}>
-				<h2 className="mb-4 shrink-0 text-lg font-semibold text-foreground">
-					{title}
-				</h2>
-				<div className={cn(fullScreenMobile && 'flex min-h-0 flex-1 flex-col')}>
+				<div className="mb-4 flex shrink-0 items-start justify-between gap-3">
+					<div className="min-w-0">
+						<h2 id={titleId} className="text-lg font-semibold text-foreground">
+							{title}
+						</h2>
+						{description && (
+							<p className="mt-1 text-sm text-foreground-muted">{description}</p>
+						)}
+					</div>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						onClick={onClose}
+						className="-mr-2 -mt-1 shrink-0"
+						aria-label="Cerrar">
+						<X className="h-5 w-5" aria-hidden />
+					</Button>
+				</div>
+				<div
+					className={cn(
+						fullScreenMobile && 'flex min-h-0 flex-1 flex-col overflow-hidden',
+					)}>
 					{children}
 				</div>
 			</div>
